@@ -5,6 +5,8 @@ import KineticText from "@/components/KineticText";
 import ImageGallery from "./ImageGallery";
 import { ShieldCheck } from "lucide-react";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DropDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const products = await query<any[]>('SELECT * FROM products WHERE id = ?', [id]);

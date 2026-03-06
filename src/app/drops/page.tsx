@@ -3,6 +3,8 @@ import { Archive, Zap } from "lucide-react";
 import KineticText from "@/components/KineticText";
 import ProductCard from "@/components/ProductCard";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DropsPage() {
     // Fetch all active products
     const products = await query<any[]>('SELECT * FROM products ORDER BY createdAt DESC');
