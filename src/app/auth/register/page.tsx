@@ -1,0 +1,169 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { UserPlus, ShieldAlert, Globe, Phone, Mail, User } from "lucide-react";
+import Link from "next/link";
+import KineticText from "@/components/KineticText";
+import MagneticButton from "@/components/MagneticButton";
+
+export default function RegisterPage() {
+    const router = useRouter();
+    const [name, setName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
+    const [location, setLocation] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError("");
+
+        try {
+            const res = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, email, password, phone, location }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                setError(data.error || "IDENTITY_INITIALIZATION_FAILED");
+            } else {
+                router.push("/auth/login?registered=true");
+            }
+        } catch (error) {
+            setError("SYSTEM_FAILURE :: REGISTRY_MODULE_OFFLINE");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen flex items-center justify-center p-4">
+            <div className="liquid-glass w-full max-w-lg p-10 rounded-[3rem] border border-white/5 relative overflow-hidden">
+                {/* Decorative background glow */}
+                <div className="absolute top-0 left-0 w-32 h-32 bg-bio-violet/10 blur-[80px] rounded-full pointer-events-none" />
+                <div className="absolute bottom-0 right-0 w-32 h-32 bg-neon-teal/10 blur-[80px] rounded-full pointer-events-none" />
+
+                <div className="text-center mb-10 space-y-4">
+                    <div className="w-16 h-16 bg-white/[0.03] border border-white/5 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                        <UserPlus className="w-8 h-8 text-bio-violet" />
+                    </div>
+                    <KineticText as="h1" className="text-3xl font-black uppercase tracking-tight">
+                        ENROLL <span className="text-bio-violet">OPERATOR</span>
+                    </KineticText>
+                    <p className="font-mono text-[10px] text-chrome-dark uppercase tracking-[0.3em]">
+                        Initializing new identity registry...
+                    </p>
+                </div>
+
+                {error && (
+                    <div className="mb-8 p-4 bg-bio-violet/5 border border-bio-violet/20 rounded-2xl flex items-start gap-3">
+                        <ShieldAlert className="w-4 h-4 text-bio-violet shrink-0 mt-0.5" />
+                        <p className="font-mono text-[10px] text-bio-violet font-bold uppercase tracking-wider">{error}</p>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-6 text-left">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1 flex items-center gap-2">
+                                <User className="w-2.5 h-2.5" /> Full Name
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-bio-violet transition-all"
+                                placeholder="Operator Name"
+                            />
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1 flex items-center gap-2">
+                                <Mail className="w-2.5 h-2.5" /> Registry Email
+                            </label>
+                            <input
+                                type="email"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-bio-violet transition-all"
+                                placeholder="name@guapo.drop"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1 flex items-center gap-2">
+                                <Phone className="w-2.5 h-2.5" /> Comms Link
+                            </label>
+                            <input
+                                type="tel"
+                                required
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-bio-violet transition-all"
+                                placeholder="+216 -- --- ---"
+                            />
+                        </div>
+
+                        <div className="space-y-3">
+                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1 flex items-center gap-2">
+                                <Globe className="w-2.5 h-2.5" /> Grid Sector
+                            </label>
+                            <input
+                                type="text"
+                                required
+                                value={location}
+                                onChange={(e) => setLocation(e.target.value)}
+                                className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-bio-violet transition-all"
+                                placeholder="e.g. Tunis"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-3">
+                        <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1">Universal Access Code</label>
+                        <input
+                            type="password"
+                            required
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-bio-violet transition-all"
+                            placeholder="••••••••"
+                        />
+                    </div>
+
+                    <div className="pt-6">
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full"
+                        >
+                            <MagneticButton className="w-full py-4 bg-bio-violet text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_0_30px_rgba(188,0,255,0.2)] disabled:opacity-50 transition-all">
+                                {loading ? "ENROLLING..." : "COMMIT_IDENTITY_REGISTRY"}
+                            </MagneticButton>
+                        </button>
+                    </div>
+                </form>
+
+                <div className="mt-10 pt-8 border-t border-white/5 text-center space-y-4">
+                    <Link href="/auth/login" className="block font-mono text-[10px] text-chrome-dark hover:text-bio-violet uppercase tracking-widest transition-colors font-bold">
+                        Linked Identity? [ <span className="text-white">LINK_IN</span> ]
+                    </Link>
+                    <Link href="/" className="block font-mono text-[9px] text-white/20 hover:text-white uppercase tracking-tighter transition-colors">
+                        &larr; Return to Base Grid
+                    </Link>
+                </div>
+            </div>
+        </div>
+    );
+}
