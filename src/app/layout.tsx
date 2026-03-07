@@ -39,7 +39,7 @@ export default function RootLayout({
           <FloatingGlow />
           <Nav />
           <CartSidebar />
-          <div className="pt-24 relative z-10">
+          <div className="relative z-10" style={{ paddingTop: "var(--nav-height)" }}>
             {children}
           </div>
         </Providers>

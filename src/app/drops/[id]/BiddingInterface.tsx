@@ -78,17 +78,17 @@ export default function BiddingInterface({ product }: { product: any }) {
     };
 
     return (
-        <div className="liquid-glass p-8 rounded-[2.5rem] border border-white/5 space-y-8 relative overflow-hidden group">
+        <div className="group relative space-y-6 overflow-hidden rounded-[2rem] border border-white/5 p-5 liquid-glass md:space-y-8 md:rounded-[2.5rem] md:p-8">
             {/* Ambient glow */}
             <div className="absolute top-0 right-0 w-32 h-32 opacity-10 blur-[60px] rounded-full pointer-events-none" style={{ backgroundColor: accentHex }} />
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 pb-8 border-b border-white/5">
+            <div className="flex flex-col gap-5 border-b border-white/5 pb-6 md:flex-row md:items-end md:justify-between md:gap-6 md:pb-8">
                 <div className="space-y-2">
                     <p className={`font-mono text-[10px] uppercase tracking-[0.3em] font-bold`} style={{ color: accentHex }}>
                         {isBidding ? 'Current Bid' : 'Price'}
                     </p>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-black text-white tracking-tighter">
+                        <span className="text-4xl font-black tracking-tighter text-white md:text-5xl">
                             {currentPrice}
                         </span>
                         <span className="font-mono text-xs text-chrome-dark font-bold uppercase tracking-widest">TND</span>
@@ -96,7 +96,7 @@ export default function BiddingInterface({ product }: { product: any }) {
                 </div>
 
                 {isBidding ? (
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col gap-1 md:items-end">
                         <div className="flex items-center gap-2 text-bio-violet">
                             <TrendingUp className="w-3 h-3" />
                             <span className="font-mono text-[10px] uppercase tracking-widest font-bold">Total Bids</span>
@@ -104,7 +104,7 @@ export default function BiddingInterface({ product }: { product: any }) {
                         <p className="text-2xl font-black text-white">{liveData?.totalBids || 0} <span className="text-[10px] text-chrome-dark uppercase font-mono">Bids</span></p>
                     </div>
                 ) : (
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col gap-1 md:items-end">
                         <div className="flex items-center gap-2 text-neon-teal">
                             <Zap className="w-3 h-3" />
                             <span className="font-mono text-[10px] uppercase tracking-widest font-bold">In Stock</span>
@@ -115,7 +115,7 @@ export default function BiddingInterface({ product }: { product: any }) {
             </div>
 
             {isBidding && (
-                <div className={`p-4 rounded-2xl border ${isEnded ? 'bg-red-500/5 border-red-500/20 text-red-500' : 'bg-bio-violet/5 border-bio-violet/20 text-bio-violet'} flex items-center gap-4`}>
+                <div className={`flex items-center gap-3 rounded-2xl border p-4 ${isEnded ? 'bg-red-500/5 border-red-500/20 text-red-500' : 'bg-bio-violet/5 border-bio-violet/20 text-bio-violet'}`}>
                     <Clock className={`w-5 h-5 ${!isEnded && 'animate-pulse'}`} />
                     <div className="space-y-0.5">
                         <p className="font-mono text-[9px] uppercase tracking-[0.2em] opacity-60 font-bold">Auction Ends</p>
@@ -144,7 +144,7 @@ export default function BiddingInterface({ product }: { product: any }) {
                             disabled={loading}
                             value={bidAmount}
                             onChange={(e) => setBidAmount(e.target.value)}
-                            className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-xl focus:outline-none focus:border-bio-violet focus:ring-1 focus:ring-bio-violet/20 transition-all placeholder:text-white/10"
+                            className="w-full rounded-2xl border border-white/10 bg-white/[0.02] p-4 font-mono text-lg transition-all placeholder:text-white/10 focus:border-bio-violet focus:outline-none focus:ring-1 focus:ring-bio-violet/20 md:text-xl"
                             placeholder={`Enter ${currentPrice + (product.minIncrement || 1)}+`}
                             step="any"
                         />
@@ -154,7 +154,7 @@ export default function BiddingInterface({ product }: { product: any }) {
                 <MagneticButton
                     onClick={(e: any) => handleAction(e)}
                     disabled={isEnded || loading || (!isBidding && product.stockQty <= 0)}
-                    className={`w-full py-5 font-black text-xs uppercase tracking-[0.3em] rounded-2xl transition-all ${isBidding
+                    className={`w-full rounded-2xl py-4 font-black text-[10px] uppercase tracking-[0.28em] transition-all md:py-5 md:text-xs md:tracking-[0.3em] ${isBidding
                         ? 'bg-bio-violet text-white hover:brightness-110'
                         : 'bg-neon-teal text-black hover:brightness-110'
                         } disabled:opacity-30 disabled:cursor-not-allowed`}

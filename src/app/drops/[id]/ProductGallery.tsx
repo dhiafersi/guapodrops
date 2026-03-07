@@ -15,18 +15,18 @@ export default function ProductGallery({ primaryImage, secondaryImages }: { prim
 
     return (
         <div className="space-y-4">
-            <div className="aspect-square w-full bg-black/40 border-2 border-cyber-purple/50 flex items-center justify-center relative overflow-hidden group">
+            <div className="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-[2rem] border-2 border-cyber-purple/50 bg-black/40">
                 <img src={activeImg} alt="Product" className="object-contain w-full h-full mix-blend-screen transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-[url('/scanlines.png')] mix-blend-overlay opacity-20 pointer-events-none"></div>
             </div>
 
             {imagesArray.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-4 gap-2 md:gap-3">
                     {imagesArray.map((img, idx) => (
                         <button
                             key={idx}
                             onClick={() => setActiveImg(img)}
-                            className={`aspect-square border-2 transition-all ${activeImg === img ? 'border-electric-lime scale-95' : 'border-chrome-dark/30 hover:border-cyber-purple'}`}
+                            className={`aspect-square overflow-hidden rounded-2xl border-2 transition-all ${activeImg === img ? 'border-electric-lime scale-95' : 'border-chrome-dark/30 hover:border-cyber-purple'}`}
                         >
                             <img src={img} alt={`Thumb ${idx}`} className="w-full h-full object-cover opacity-60 hover:opacity-100" />
                         </button>

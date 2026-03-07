@@ -46,11 +46,11 @@ export default function CartSidebar() {
             {/* Floating Trigger */}
             <button
                 onClick={() => setIsOpen(true)}
-                className="fixed bottom-8 right-8 z-50 bg-electric-lime text-black p-4 rounded-full shadow-[0_0_20px_#CCFF00] hover:scale-110 transition-transform group"
+                className="safe-bottom fixed bottom-4 right-4 z-50 rounded-full bg-electric-lime p-3 text-black shadow-[0_0_20px_#CCFF00] transition-transform hover:scale-110 group md:bottom-8 md:right-8 md:p-4"
             >
-                <ShoppingCart className="w-6 h-6" />
+                <ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />
                 {cartItems.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-cyber-purple text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center border-2 border-black font-bold">
+                    <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-black bg-cyber-purple text-[10px] font-bold text-white">
                         {cartItems.length}
                     </span>
                 )}
@@ -65,10 +65,10 @@ export default function CartSidebar() {
             )}
 
             {/* Sidebar */}
-            <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-zinc-950 border-l border-chrome-dark/30 z-[101] transform transition-transform duration-500 ease-cyber ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-                <div className="p-6 h-full flex flex-col">
-                    <div className="flex justify-between items-center mb-8 border-b border-chrome-dark/30 pb-4">
-                        <h2 className="text-2xl font-display font-bold text-white uppercase flex items-center gap-3">
+            <div className={`safe-bottom fixed top-0 right-0 z-[101] h-full w-full transform border-l border-chrome-dark/30 bg-zinc-950 transition-transform duration-500 ease-cyber md:max-w-md ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="flex h-full flex-col p-4 md:p-6">
+                    <div className="mb-6 flex items-center justify-between border-b border-chrome-dark/30 pb-4 md:mb-8">
+                        <h2 className="flex items-center gap-3 text-xl font-display font-bold uppercase text-white md:text-2xl">
                             <ShoppingCart className="text-electric-lime" /> Access_Cart
                         </h2>
                         <button onClick={() => setIsOpen(false)} className="text-chrome-dark hover:text-white transition-colors">
@@ -76,20 +76,20 @@ export default function CartSidebar() {
                         </button>
                     </div>
 
-                    <div className="flex-grow overflow-y-auto space-y-4 pr-2 custom-scrollbar">
+                    <div className="custom-scrollbar flex-grow space-y-3 overflow-y-auto pr-1 md:space-y-4 md:pr-2">
                         {cartItems.length === 0 ? (
-                            <div className="text-center py-20 opacity-30">
+                            <div className="py-16 text-center opacity-30 md:py-20">
                                 <ShoppingCart className="w-12 h-12 mx-auto mb-4" />
                                 <p className="font-mono text-xs uppercase tracking-widest">Cart_Empty : Request_Assets</p>
                             </div>
                         ) : (
                             cartItems.map((item: any) => (
-                                <div key={item.id} className="glass-panel p-4 flex gap-4 border border-chrome-dark/20 relative group">
-                                    <div className="w-20 h-20 bg-black/60 border border-chrome-dark/30 p-2 flex items-center justify-center shrink-0">
+                                <div key={item.id} className="glass-panel relative flex gap-3 border border-chrome-dark/20 p-3 group md:gap-4 md:p-4">
+                                    <div className="flex h-16 w-16 shrink-0 items-center justify-center border border-chrome-dark/30 bg-black/60 p-2 md:h-20 md:w-20">
                                         <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain mix-blend-screen" />
                                     </div>
-                                    <div className="flex-grow">
-                                        <h4 className="text-white font-bold uppercase text-sm mb-1">{item.name}</h4>
+                                    <div className="min-w-0 flex-grow pr-6">
+                                        <h4 className="mb-1 line-clamp-2 text-sm font-bold uppercase text-white">{item.name}</h4>
                                         <p className="text-electric-lime font-mono text-sm">{item.fixedPrice} TND</p>
                                         <div className="flex items-center gap-2 mt-2">
                                             <span className="text-[10px] font-mono text-chrome-dark">QTY: {item.quantity}</span>
@@ -106,10 +106,10 @@ export default function CartSidebar() {
                         )}
                     </div>
 
-                    <div className="mt-auto pt-6 border-t border-chrome-dark/30 space-y-4">
+                    <div className="mt-auto space-y-4 border-t border-chrome-dark/30 pt-5 md:pt-6">
                         <div className="flex justify-between items-end">
                             <span className="text-xs font-mono text-chrome-dark uppercase">Total_Allocation</span>
-                            <span className="text-3xl font-display font-bold text-white">{total} <span className="text-sm">TND</span></span>
+                            <span className="text-2xl font-display font-bold text-white md:text-3xl">{total} <span className="text-sm">TND</span></span>
                         </div>
                         {message && (
                             <div className={`p-3 text-[10px] font-mono border ${message.startsWith("ERROR") ? "border-red-500 text-red-500" : "border-electric-lime text-electric-lime"} bg-black/50 text-center uppercase tracking-tighter`}>
@@ -119,7 +119,7 @@ export default function CartSidebar() {
                         <button
                             onClick={finalizeAcquisition}
                             disabled={cartItems.length === 0 || loading}
-                            className="w-full bg-electric-lime text-black font-display font-bold py-4 uppercase tracking-widest hover:bg-[#bbf000] shadow-[0_0_15px_#CCFF00] disabled:opacity-30 disabled:grayscale transition-all flex items-center justify-center gap-3"
+                            className="flex w-full items-center justify-center gap-3 bg-electric-lime py-4 font-display font-bold uppercase tracking-[0.2em] text-black shadow-[0_0_15px_#CCFF00] transition-all hover:bg-[#bbf000] disabled:grayscale disabled:opacity-30"
                         >
                             <PackageCheck className="w-5 h-5 flex-shrink-0" />
                             {loading ? "INITIALIZING_TX..." : "Finalize_Acquisition"}

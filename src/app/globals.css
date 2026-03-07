@@ -18,8 +18,22 @@
 
 /* Base reset for body */
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-deep-charcoal text-chrome-light font-mono overflow-x-hidden min-h-screen relative;
+  }
+}
+
+:root {
+  --nav-height: 5rem;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --nav-height: 4.5rem;
   }
 }
 
@@ -93,4 +107,12 @@
 
 .btn-glitch:active {
   transform: scale(0.95);
+}
+
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+.safe-top {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
 }
