@@ -3,11 +3,12 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== "ADMIN") {
+        if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
         }
 
@@ -15,15 +16,12 @@ export async function GET(req: Request) {
         const id = searchParams.get("id");
 
         if (id) {
-            // get specific product
-            const products = await query<any[]>('SELECT * FROM products WHERE id = ?', [id]);
+            const products = await query<any[]>('SELECT * FROM products WHERE id = $1', [id]);
             if (products.length === 0) return NextResponse.json({ error: "Not found" }, { status: 404 });
             return NextResponse.json({ product: products[0] });
         }
 
-        // get all active drops
-        const products = await query<any[]>('SELECT * FROM products ORDER BY createdAt DESC');
-
+        const products = await query<any[]>('SELECT * FROM products ORDER BY "createdAt" DESC');
         return NextResponse.json({ success: true, products }, { status: 200 });
     } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -34,8 +32,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-
-        if (!session || session.user.role !== "ADMIN") {
+        if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
         }
 
@@ -55,21 +52,14 @@ export async function POST(req: Request) {
             endTimeStr = endDate.toISOString().slice(0, 19).replace('T', ' ');
         }
 
-        // Process images array
         const extraImages = secondaryImages ? secondaryImages.split('\n').filter((url: string) => url.trim() !== '') : [];
         const imagesJson = JSON.stringify(extraImages);
 
         await query(
-            `INSERT INTO products 
-      (id, name, imageUrl, images, description, mode, startPrice, endTime, minIncrement, fixedPrice, stockQty)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO products (id, name, "imageUrl", images, description, mode, "startPrice", "endTime", "minIncrement", "fixedPrice", "stockQty")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
             [
-                id,
-                name,
-                imageUrl || null,
-                imagesJson,
-                description || null,
-                mode,
+                id, name, imageUrl || null, imagesJson, description || null, mode,
                 mode === "BIDDING" ? (startPrice || 0) : null,
                 endTimeStr,
                 mode === "BIDDING" ? (minIncrement || 1) : null,
@@ -88,7 +78,7 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-        if (!session || session.user.role !== "ADMIN") {
+        if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
         }
 
@@ -110,16 +100,9 @@ export async function PUT(req: Request) {
         const imagesJson = JSON.stringify(extraImages);
 
         await query(
-            `UPDATE products 
-             SET name = ?, imageUrl = ?, images = ?, description = ?, mode = ?, 
-                 startPrice = ?, endTime = ?, minIncrement = ?, fixedPrice = ?, stockQty = ?
-             WHERE id = ?`,
+            `UPDATE products SET name=$1, "imageUrl"=$2, images=$3, description=$4, mode=$5, "startPrice"=$6, "endTime"=$7, "minIncrement"=$8, "fixedPrice"=$9, "stockQty"=$10 WHERE id=$11`,
             [
-                name,
-                imageUrl || null,
-                imagesJson,
-                description || null,
-                mode,
+                name, imageUrl || null, imagesJson, description || null, mode,
                 mode === "BIDDING" ? (startPrice || 0) : null,
                 endTimeStr,
                 mode === "BIDDING" ? (minIncrement || 1) : null,
@@ -139,35 +122,26 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
     try {
         const session = await getServerSession(authOptions);
-
         if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
         }
 
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
-
         if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-        // 1. Check if product is linked to finalized orders
-        const orders = await query<any[]>('SELECT id FROM order_items WHERE productId = ? LIMIT 1', [id]);
+        const orders = await query<any[]>('SELECT id FROM order_items WHERE "productId" = $1 LIMIT 1', [id]);
         if (orders.length > 0) {
-            return NextResponse.json({
-                error: "RESCISSION_FAILURE: Asset is linked to finalized orders. Registry integrity must be maintained. Modification restricted."
-            }, { status: 400 });
+            return NextResponse.json({ error: "RESCISSION_FAILURE: Asset linked to finalized orders." }, { status: 400 });
         }
 
-        // 2. Clear transient dependencies (carts, bids)
-        await query('DELETE FROM cart_items WHERE productId = ?', [id]);
-        await query('DELETE FROM bids WHERE productId = ?', [id]);
-
-        // 3. Terminate asset
-        await query('DELETE FROM products WHERE id = ?', [id]);
+        await query('DELETE FROM cart_items WHERE "productId" = $1', [id]);
+        await query('DELETE FROM bids WHERE "productId" = $1', [id]);
+        await query('DELETE FROM products WHERE id = $1', [id]);
 
         return NextResponse.json({ success: true });
-
     } catch (error: any) {
         console.error("Failed to terminate product:", error);
-        return NextResponse.json({ error: "Internal registry failure during termination: " + error.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal registry failure: " + error.message }, { status: 500 });
     }
 }

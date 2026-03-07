@@ -3,21 +3,24 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const items = await query(`
-            SELECT c.*, p.name, p.imageUrl, p.fixedPrice, p.stockQty 
+            SELECT c.*, p.name, p."imageUrl", p."fixedPrice", p."stockQty"
             FROM cart_items c
-            JOIN products p ON c.productId = p.id
-            WHERE c.userId = ?
-            ORDER BY c.createdAt DESC
+            JOIN products p ON c."productId" = p.id
+            WHERE c."userId" = $1
+            ORDER BY c."createdAt" DESC
         `, [session.user.id]);
 
         return NextResponse.json({ items });
     } catch (e) {
+        console.error("Cart fetch error:", e);
         return NextResponse.json({ error: "Cart fetch failed" }, { status: 500 });
     }
 }
@@ -29,21 +32,25 @@ export async function POST(req: Request) {
 
         const { productId, quantity = 1 } = await req.json();
 
-        // Verify product is STOCK mode
-        const products = await query<any[]>('SELECT mode, stockQty FROM products WHERE id = ?', [productId]);
+        const products = await query<any[]>('SELECT mode, "stockQty" FROM products WHERE id = $1', [productId]);
         if (products.length === 0) return NextResponse.json({ error: "Product not found" }, { status: 404 });
         if (products[0].mode !== 'STOCK') return NextResponse.json({ error: "Only stock items can be added to cart" }, { status: 400 });
 
         const id = "CART_" + Date.now().toString() + Math.random().toString(36).substring(2, 6).toUpperCase();
 
-        await query(`
-            INSERT INTO cart_items (id, userId, productId, quantity)
-            VALUES (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
-        `, [id, session.user.id, productId, quantity]);
+        const existing = await query<any[]>('SELECT id, quantity FROM cart_items WHERE "userId" = $1 AND "productId" = $2', [session.user.id, productId]);
+        if (existing.length > 0) {
+            await query('UPDATE cart_items SET quantity = quantity + $1 WHERE id = $2', [quantity, existing[0].id]);
+        } else {
+            await query(
+                'INSERT INTO cart_items (id, "userId", "productId", quantity) VALUES ($1, $2, $3, $4)',
+                [id, session.user.id, productId, quantity]
+            );
+        }
 
         return NextResponse.json({ success: true });
     } catch (e) {
+        console.error("Cart add error:", e);
         return NextResponse.json({ error: "Failed to add to cart" }, { status: 500 });
     }
 }
@@ -56,7 +63,7 @@ export async function DELETE(req: Request) {
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("id");
 
-        await query('DELETE FROM cart_items WHERE id = ? AND userId = ?', [id, session.user.id]);
+        await query('DELETE FROM cart_items WHERE id = $1 AND "userId" = $2', [id, session.user.id]);
         return NextResponse.json({ success: true });
     } catch (e) {
         return NextResponse.json({ error: "Failed to remove item" }, { status: 500 });
@@ -70,12 +77,11 @@ export async function PUT() {
 
         const userId = session.user.id;
 
-        // Fetch all items in cart with current price
         const cartItems = await query<any[]>(`
-            SELECT c.*, p.name, p.fixedPrice 
+            SELECT c.*, p.name, p."fixedPrice"
             FROM cart_items c
-            JOIN products p ON c.productId = p.id
-            WHERE c.userId = ?
+            JOIN products p ON c."productId" = p.id
+            WHERE c."userId" = $1
         `, [userId]);
 
         if (cartItems.length === 0) return NextResponse.json({ error: "Cart is empty" }, { status: 400 });
@@ -83,19 +89,16 @@ export async function PUT() {
         const orderId = "ORD_" + Date.now().toString() + Math.random().toString(36).substring(2, 6).toUpperCase();
         const totalAmount = cartItems.reduce((acc, item) => acc + (item.fixedPrice * item.quantity), 0);
 
-        // 1. Create Order record (STOCK IS NOT DEDUCTED YET)
-        await query('INSERT INTO orders (id, userId, totalAmount, status) VALUES (?, ?, ?, ?)',
+        await query('INSERT INTO orders (id, "userId", "totalAmount", status) VALUES ($1, $2, $3, $4)',
             [orderId, userId, totalAmount, 'PENDING']);
 
-        // 2. Create Order Items
         for (const item of cartItems) {
             const itemId = "ORDI_" + Math.random().toString(36).substring(2, 10).toUpperCase();
-            await query('INSERT INTO order_items (id, orderId, productId, quantity, priceAtTime) VALUES (?, ?, ?, ?, ?)',
+            await query('INSERT INTO order_items (id, "orderId", "productId", quantity, "priceAtTime") VALUES ($1, $2, $3, $4, $5)',
                 [itemId, orderId, item.productId, item.quantity, item.fixedPrice]);
         }
 
-        // 3. Clear cart
-        await query('DELETE FROM cart_items WHERE userId = ?', [userId]);
+        await query('DELETE FROM cart_items WHERE "userId" = $1', [userId]);
 
         return NextResponse.json({ success: true, message: "ACQUISITION_INITIALIZED: Admin will verify assets.", orderId });
     } catch (e) {

@@ -3,11 +3,13 @@ import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
 
-        if (!session || session.user.role !== "ADMIN") {
+        if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
         }
 

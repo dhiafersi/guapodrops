@@ -16,6 +16,13 @@ export default async function DropDetailPage({ params }: { params: Promise<{ id:
     }
 
     const product = products[0];
+    // Normalize column names (PostgreSQL returns snake_case)
+    product.imageUrl = product.image_url ?? product.imageUrl;
+    product.startPrice = product.start_price ?? product.startPrice;
+    product.endTime = product.end_time ?? product.endTime;
+    product.minIncrement = product.min_increment ?? product.minIncrement;
+    product.fixedPrice = product.fixed_price ?? product.fixedPrice;
+    product.stockQty = product.stock_qty ?? product.stockQty;
     const isBidding = product.mode === 'BIDDING';
 
     // Parse extra images from JSON column

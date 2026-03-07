@@ -12,10 +12,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
         const stats = await query<{ maxAmount: number, totalBids: number }[]>(`
             SELECT 
-                MAX(amount) as maxAmount,
-                COUNT(id) as totalBids
+                MAX(amount) as "maxAmount",
+                COUNT(id) as "totalBids"
             FROM bids
-            WHERE productId = ?
+            WHERE "productId" = $1
         `, [productId]);
 
         const highestBid = stats[0]?.maxAmount || 0;

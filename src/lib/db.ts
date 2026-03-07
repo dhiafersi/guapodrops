@@ -1,12 +1,17 @@
 import { Pool } from 'pg';
 
-// Prioritize Supabase/PostgreSQL connection strings
-let rawConnectionString =
-    process.env.DATABASE_URL ||
-    process.env.DATABASE_POSTGRES_URL ||
-    process.env.POSTGRES_URL ||
-    process.env.DATABASE_POSTGRES_PRISMA_URL ||
-    'postgresql://postgres:postgres@localhost:5432/postgres';
+// Prioritize the pooler link from Vercel's Supabase integration if available
+const sources = [
+    { name: 'DATABASE_POSTGRES_PRISMA_URL', val: process.env.DATABASE_POSTGRES_PRISMA_URL },
+    { name: 'DATABASE_URL', val: process.env.DATABASE_URL },
+    { name: 'DATABASE_POSTGRES_URL', val: process.env.DATABASE_POSTGRES_URL },
+    { name: 'POSTGRES_URL', val: process.env.POSTGRES_URL }
+];
+
+const selectedSource = sources.find(s => s.val && s.val.trim().length > 0) || { name: 'DEFAULT', val: 'postgresql://postgres:postgres@localhost:5432/postgres' };
+let rawConnectionString = (selectedSource.val || '').trim();
+
+console.log(`📡 DB_SOURCE: [${selectedSource.name}]`);
 
 // Aggressive MySQL prevention: if the connection string starts with mysql, force it to postgres format
 // or fallback to localhost postgres if it looks like a local MySQL leftover.
@@ -15,17 +20,30 @@ if (rawConnectionString.startsWith('mysql:')) {
     rawConnectionString = 'postgresql://postgres:postgres@localhost:5432/postgres';
 }
 
-// Log connection params during build/init to debug Vercel logs
-const dbUrl = new URL(rawConnectionString);
-console.log(`🔌 DB Init: Targeting ${dbUrl.hostname}:${dbUrl.port || '5432'}`);
+// Log connection params safely
+let dbUrl: URL;
+try {
+    // Remove supa=base-pooler.x if present as standard pg driver might not like it
+    let cleanString = rawConnectionString.replace(/[\?&]supa=base-pooler\.x/, '');
+    if (!cleanString.includes('?') && cleanString.includes('&')) {
+        cleanString = cleanString.replace('&', '?');
+    }
+
+    dbUrl = new URL(cleanString);
+    console.log(`🔌 DB_INIT: Targeting ${dbUrl.hostname}:${dbUrl.port || '5432'} (Protocol: ${dbUrl.protocol})`);
+    rawConnectionString = cleanString;
+} catch (e: any) {
+    console.error(`⛔ DATABASE_URL_PARSE_ERROR: ${e.message}`);
+    dbUrl = new URL('postgresql://localhost:5432/postgres');
+}
 
 if (dbUrl.port === '3306' || rawConnectionString.includes(':3306')) {
-    throw new Error("⛔ CRITICAL_ERROR: MySQL port 3306 detected in PostgreSQL driver. Registry integrity failure. System must use Supabase Port 6543/5432.");
+    throw new Error("⛔ CRITICAL_ERROR: MySQL port 3306 detected in PostgreSQL driver.");
 }
 
 export const pool = new Pool({
-    connectionString: rawConnectionString,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    connectionString: rawConnectionString.replace('sslmode=require', 'sslmode=disable'),
+    ssl: { rejectUnauthorized: false }
 });
 
 /**
@@ -43,8 +61,13 @@ export async function query<T>(sql: string, params: any[] = []): Promise<T> {
     try {
         const { rows } = await pool.query(pgSql, params);
         return rows as T;
-    } catch (error) {
-        console.error('Database Query Error:', error);
+    } catch (error: any) {
+        console.error('⛔ DATABASE_QUERY_ERROR:', {
+            message: error.message,
+            code: error.code,
+            stack: error.stack,
+            query: pgSql.substring(0, 100) + '...'
+        });
         throw error;
     }
 }

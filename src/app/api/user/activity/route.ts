@@ -15,20 +15,20 @@ export async function GET(req: Request) {
 
         // Fetch user bids joined with product info
         const bids = await query<any[]>(`
-        SELECT b.id, b.amount, b.createdAt, p.name as productName, p.endTime
+        SELECT b.id, b.amount, b."createdAt", p.name as "productName", p."endTime"
         FROM bids b
-        JOIN products p ON b.productId = p.id
-        WHERE b.userId = ?
-        ORDER BY b.createdAt DESC
+        JOIN products p ON b."productId" = p.id
+        WHERE b."userId" = $1
+        ORDER BY b."createdAt" DESC
     `, [userId]);
 
         // Fetch user orders joined with product info
         const orders = await query<any[]>(`
-        SELECT o.id, o.quantity, o.totalPrice, o.status, p.name as productName
+        SELECT o.id, o.quantity, o."totalAmount", o.status, p.name as "productName"
         FROM orders o
-        JOIN products p ON o.productId = p.id
-        WHERE o.userId = ?
-        ORDER BY o.createdAt DESC
+        JOIN products p ON o."productId" = p.id
+        WHERE o."userId" = $1
+        ORDER BY o."createdAt" DESC
     `, [userId]);
 
         return NextResponse.json({ success: true, bids, orders }, { status: 200 });

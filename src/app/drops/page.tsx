@@ -7,7 +7,9 @@ export const dynamic = 'force-dynamic';
 
 export default async function DropsPage() {
     // Fetch all active products
-    const products = await query<any[]>('SELECT * FROM products ORDER BY createdAt DESC');
+    const products = await query<any[]>(
+        'SELECT * FROM products ORDER BY "createdAt" DESC'
+    );
 
     return (
         <div className="min-h-screen pb-20">
