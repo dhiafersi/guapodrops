@@ -14,6 +14,7 @@ export default function MultiImageUploader({ label, currentUrls, onChanged }: Mu
     const [dragging, setDragging] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
+    const [manualUrls, setManualUrls] = useState("");
 
     // Parse the newline-separated string into an array
     const urlList = currentUrls
@@ -24,6 +25,29 @@ export default function MultiImageUploader({ label, currentUrls, onChanged }: Mu
     const pushUrl = (url: string) => {
         const next = [...urlList, url].join("\n");
         onChanged(next);
+    };
+
+    const addManualUrls = () => {
+        const urlsToAdd = manualUrls
+            .split("\n")
+            .map((u) => u.trim())
+            .filter(Boolean);
+
+        if (urlsToAdd.length === 0) {
+            setError("Add at least one image URL.");
+            return;
+        }
+
+        const uniqueUrls = urlsToAdd.filter((url) => !urlList.includes(url));
+        if (uniqueUrls.length === 0) {
+            setError("Those image URLs are already in the gallery.");
+            return;
+        }
+
+        const next = [...urlList, ...uniqueUrls].join("\n");
+        onChanged(next);
+        setManualUrls("");
+        setError("");
     };
 
     const removeUrl = (index: number) => {
@@ -119,6 +143,30 @@ export default function MultiImageUploader({ label, currentUrls, onChanged }: Mu
                         </>
                     )}
                 </div>
+            </div>
+
+            <div className="space-y-2 rounded-xl border border-white/10 bg-black/20 p-3">
+                <div className="flex items-center justify-between gap-3">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-white/60">
+                        Add secondary image links
+                    </span>
+                    <button
+                        type="button"
+                        onClick={addManualUrls}
+                        className="rounded-lg border border-neon-teal/40 px-3 py-1 font-mono text-[10px] uppercase tracking-widest text-neon-teal transition-colors hover:border-neon-teal hover:bg-neon-teal/10"
+                    >
+                        Add Link{manualUrls.includes("\n") ? "s" : ""}
+                    </button>
+                </div>
+                <textarea
+                    value={manualUrls}
+                    onChange={(e) => setManualUrls(e.target.value)}
+                    placeholder={"https://example.com/image-1.png\nhttps://example.com/image-2.png"}
+                    className="min-h-[88px] w-full rounded-xl border border-white/10 bg-black/30 p-3 font-mono text-xs text-white outline-none transition-colors placeholder:text-white/20 focus:border-neon-teal"
+                />
+                <p className="font-mono text-[9px] text-white/30">
+                    Paste one URL per line to add multiple gallery images at once.
+                </p>
             </div>
 
             {error && <p className="text-red-400 font-mono text-[10px]">{error}</p>}
