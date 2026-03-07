@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import { motion, useSpring, useTransform } from "framer-motion";
-import Image from "next/image";
 import KineticText from "@/components/KineticText";
 import MagneticButton from "@/components/MagneticButton";
 import ProductCard from "@/components/ProductCard";
@@ -34,7 +33,7 @@ export default function CyberLanding({ products }: CyberLandingProps) {
         <main className="relative min-h-screen bg-organic-charcoal pb-20 text-white">
             <FloatingGlow />
 
-            <section className="relative flex min-h-[78svh] flex-col items-center justify-center overflow-hidden px-4 pb-12 pt-10 md:min-h-[80vh] md:px-6">
+            <section className="relative flex min-h-[78svh] flex-col items-center justify-center overflow-hidden px-4 pb-12 pt-8 md:min-h-[80vh] md:px-6">
                 <motion.div
                     style={{
                         x: mouseX,
@@ -47,7 +46,7 @@ export default function CyberLanding({ products }: CyberLandingProps) {
                     <div className="w-[400px] h-[400px] border border-white/20 rounded-full" />
                 </motion.div>
 
-                <div className="absolute inset-x-4 top-8 z-20 rounded-[2rem] border border-white/8 bg-white/[0.03] p-4 backdrop-blur-md md:hidden">
+                <div className="relative z-20 mb-8 w-full max-w-sm self-stretch rounded-[2rem] border border-white/8 bg-white/[0.03] p-4 backdrop-blur-md md:hidden">
                     <div className="flex items-center justify-between gap-4">
                         <div>
                             <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/35">

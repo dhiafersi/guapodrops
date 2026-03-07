@@ -6,6 +6,14 @@ export default function ParticleEffect() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     useEffect(() => {
+        const prefersTouch =
+            window.matchMedia("(pointer: coarse)").matches ||
+            window.matchMedia("(hover: none)").matches;
+
+        if (prefersTouch) {
+            return;
+        }
+
         const canvas = canvasRef.current;
         if (!canvas) return;
 
@@ -94,7 +102,7 @@ export default function ParticleEffect() {
     return (
         <canvas
             ref={canvasRef}
-            className="fixed inset-0 pointer-events-none z-[9999]"
+            className="fixed inset-0 pointer-events-none z-[9999] hidden md:block"
             style={{ mixBlendMode: 'screen' }}
         />
     );
