@@ -1,5 +1,6 @@
 "use client";
 
+import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus, ShieldAlert, Globe, Phone, Mail, User } from "lucide-react";
@@ -34,7 +35,18 @@ export default function RegisterPage() {
             if (!res.ok) {
                 setError(data.error || "IDENTITY_INITIALIZATION_FAILED");
             } else {
-                router.push("/auth/login?registered=true");
+                const loginResult = await signIn("credentials", {
+                    redirect: false,
+                    email,
+                    password,
+                });
+
+                if (loginResult?.error) {
+                    router.push("/auth/login?registered=true");
+                } else {
+                    router.push("/dashboard");
+                    router.refresh();
+                }
             }
         } catch (error) {
             setError("SYSTEM_FAILURE :: REGISTRY_MODULE_OFFLINE");
