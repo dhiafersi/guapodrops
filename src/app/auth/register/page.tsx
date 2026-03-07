@@ -143,15 +143,13 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="pt-6">
-                        <button
+                        <MagneticButton
                             type="submit"
                             disabled={loading}
-                            className="w-full"
+                            className="w-full py-4 bg-bio-violet text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_0_30px_rgba(188,0,255,0.2)] disabled:opacity-50 transition-all"
                         >
-                            <MagneticButton className="w-full py-4 bg-bio-violet text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_0_30px_rgba(188,0,255,0.2)] disabled:opacity-50 transition-all">
-                                {loading ? "ENROLLING..." : "COMMIT_IDENTITY_REGISTRY"}
-                            </MagneticButton>
-                        </button>
+                            {loading ? "ENROLLING..." : "COMMIT_IDENTITY_REGISTRY"}
+                        </MagneticButton>
                     </div>
                 </form>
 

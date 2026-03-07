@@ -99,15 +99,13 @@ export default function LoginPage() {
                     </div>
 
                     <div className="pt-4">
-                        <button
+                        <MagneticButton
                             type="submit"
                             disabled={loading}
-                            className="w-full"
+                            className="w-full py-4 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-neon-teal/20 transition-all disabled:opacity-50"
                         >
-                            <MagneticButton className="w-full py-4 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-neon-teal/20 transition-all disabled:opacity-50">
-                                {loading ? "INITIALIZING..." : "INITIALIZE_LINK"}
-                            </MagneticButton>
-                        </button>
+                            {loading ? "INITIALIZING..." : "INITIALIZE_LINK"}
+                        </MagneticButton>
                     </div>
                 </form>
 

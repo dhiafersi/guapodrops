@@ -9,6 +9,7 @@ interface MagneticButtonProps {
     onClick?: (e?: any) => void;
     disabled?: boolean;
     threshold?: number;
+    type?: "button" | "submit" | "reset";
 }
 
 export default function MagneticButton({
@@ -17,6 +18,7 @@ export default function MagneticButton({
     onClick,
     disabled = false,
     threshold = 20,
+    type = "button",
 }: MagneticButtonProps) {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const ref = useRef<HTMLDivElement>(null);
@@ -55,6 +57,7 @@ export default function MagneticButton({
             onMouseLeave={handleMouseLeave}
         >
             <motion.button
+                type={type}
                 animate={{ x: position.x, y: position.y }}
                 transition={{ type: "spring", stiffness: 150, damping: 15, mass: 0.1 }}
                 className={`relative z-10 ${className}`}
