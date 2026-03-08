@@ -33,7 +33,7 @@ export default function RegisterPage() {
             const data = await res.json();
 
             if (!res.ok) {
-                setError(data.error || "IDENTITY_INITIALIZATION_FAILED");
+                setError(data.error || "Could not create your account.");
             } else {
                 const loginResult = await signIn("credentials", {
                     redirect: false,
@@ -49,7 +49,7 @@ export default function RegisterPage() {
                 }
             }
         } catch (error) {
-            setError("SYSTEM_FAILURE :: REGISTRY_MODULE_OFFLINE");
+            setError("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -67,10 +67,10 @@ export default function RegisterPage() {
                         <UserPlus className="w-8 h-8 text-bio-violet" />
                     </div>
                     <KineticText as="h1" className="text-3xl font-black uppercase tracking-tight">
-                        ENROLL <span className="text-bio-violet">OPERATOR</span>
+                        Create <span className="text-bio-violet">Account</span>
                     </KineticText>
                     <p className="font-mono text-[10px] text-chrome-dark uppercase tracking-[0.3em]">
-                        Initializing new identity registry...
+                        Sign up to start shopping
                     </p>
                 </div>
 
@@ -93,13 +93,13 @@ export default function RegisterPage() {
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
                                 className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-bio-violet transition-all"
-                                placeholder="Operator Name"
+                                placeholder="Your full name"
                             />
                         </div>
 
                         <div className="space-y-3">
                             <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1 flex items-center gap-2">
-                                <Mail className="w-2.5 h-2.5" /> Registry Email
+                                <Mail className="w-2.5 h-2.5" /> Email
                             </label>
                             <input
                                 type="email"
@@ -107,7 +107,7 @@ export default function RegisterPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-bio-violet transition-all"
-                                placeholder="name@guapo.drop"
+                                placeholder="you@example.com"
                             />
                         </div>
                     </div>
@@ -115,7 +115,7 @@ export default function RegisterPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">
                             <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1 flex items-center gap-2">
-                                <Phone className="w-2.5 h-2.5" /> Comms Link
+                                <Phone className="w-2.5 h-2.5" /> Phone Number
                             </label>
                             <input
                                 type="tel"
@@ -129,7 +129,7 @@ export default function RegisterPage() {
 
                         <div className="space-y-3">
                             <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1 flex items-center gap-2">
-                                <Globe className="w-2.5 h-2.5" /> Grid Sector
+                                <Globe className="w-2.5 h-2.5" /> Location
                             </label>
                             <input
                                 type="text"
@@ -143,7 +143,7 @@ export default function RegisterPage() {
                     </div>
 
                     <div className="space-y-3">
-                        <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1">Universal Access Code</label>
+                        <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold ml-1">Password</label>
                         <input
                             type="password"
                             required
@@ -160,17 +160,17 @@ export default function RegisterPage() {
                             disabled={loading}
                             className="w-full py-4 bg-bio-violet text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_0_30px_rgba(188,0,255,0.2)] disabled:opacity-50 transition-all"
                         >
-                            {loading ? "ENROLLING..." : "COMMIT_IDENTITY_REGISTRY"}
+                            {loading ? "Creating account..." : "Create Account"}
                         </MagneticButton>
                     </div>
                 </form>
 
                 <div className="mt-10 pt-8 border-t border-white/5 text-center space-y-4">
                     <Link href="/auth/login" className="block font-mono text-[10px] text-chrome-dark hover:text-bio-violet uppercase tracking-widest transition-colors font-bold">
-                        Linked Identity? [ <span className="text-white">LINK_IN</span> ]
+                        Already have an account? [ <span className="text-white">SIGN IN</span> ]
                     </Link>
                     <Link href="/" className="block font-mono text-[9px] text-white/20 hover:text-white uppercase tracking-tighter transition-colors">
-                        &larr; Return to Base Grid
+                        &larr; Back to Home
                     </Link>
                 </div>
             </div>

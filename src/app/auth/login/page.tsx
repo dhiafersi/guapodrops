@@ -28,13 +28,13 @@ export default function LoginPage() {
             });
 
             if (res?.error) {
-                setError("ACCESS_DENIED :: CREDENTIALS_INVALID");
+                setError("Invalid email or password.");
             } else {
                 router.push("/dashboard");
                 router.refresh();
             }
         } catch (error) {
-            setError("SYSTEM_FAILURE :: AUTH_MODULE_OFFLINE");
+            setError("Something went wrong. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -52,10 +52,10 @@ export default function LoginPage() {
                         <Fingerprint className="w-8 h-8 text-neon-teal" />
                     </div>
                     <KineticText as="h1" className="text-3xl font-black uppercase tracking-tight">
-                        AUTHENTICATE
+                        Sign In
                     </KineticText>
                     <p className="font-mono text-[10px] text-chrome-dark uppercase tracking-[0.3em]">
-                        Waiting for registry keys...
+                        Access your account
                     </p>
                 </div>
 
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 <form onSubmit={handleSubmit} className="space-y-8 text-left">
                     <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
-                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold">Registry Identifier</label>
+                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold">Email</label>
                         </div>
                         <div className="relative group">
                             <input
@@ -78,14 +78,14 @@ export default function LoginPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="w-full bg-white/[0.02] border border-white/10 rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-neon-teal focus:ring-1 focus:ring-neon-teal/20 transition-all placeholder:text-white/10"
-                                placeholder="operator@guapo.drop"
+                                placeholder="you@example.com"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
-                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold">Decryption Key</label>
+                            <label className="font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark font-bold">Password</label>
                             <Key className="w-3 h-3 text-white/10" />
                         </div>
                         <input
@@ -104,17 +104,17 @@ export default function LoginPage() {
                             disabled={loading}
                             className="w-full py-4 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:shadow-neon-teal/20 transition-all disabled:opacity-50"
                         >
-                            {loading ? "INITIALIZING..." : "INITIALIZE_LINK"}
+                            {loading ? "Signing in..." : "Sign In"}
                         </MagneticButton>
                     </div>
                 </form>
 
                 <div className="mt-10 pt-8 border-t border-white/5 text-center space-y-4">
                     <Link href="/auth/register" className="block font-mono text-[10px] text-chrome-dark hover:text-neon-teal uppercase tracking-widest transition-colors font-bold">
-                        New Operator? [ <span className="text-white">ENROLL</span> ]
+                        Don't have an account? [ <span className="text-white">SIGN UP</span> ]
                     </Link>
                     <Link href="/" className="block font-mono text-[9px] text-white/20 hover:text-white uppercase tracking-tighter transition-colors">
-                        &larr; Return to Base Grid
+                        &larr; Back to Home
                     </Link>
                 </div>
             </div>
