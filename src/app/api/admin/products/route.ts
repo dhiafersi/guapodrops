@@ -5,8 +5,13 @@ import { query } from "@/lib/db";
 
 export const dynamic = 'force-dynamic';
 
+async function ensureFeaturedRankColumn() {
+    await query('ALTER TABLE products ADD COLUMN IF NOT EXISTS "featuredRank" INTEGER');
+}
+
 export async function GET(req: Request) {
     try {
+        await ensureFeaturedRankColumn();
         const session = await getServerSession(authOptions);
         if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
@@ -21,7 +26,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ product: products[0] });
         }
 
-        const products = await query<any[]>('SELECT * FROM products ORDER BY "createdAt" DESC');
+        const products = await query<any[]>('SELECT * FROM products ORDER BY CASE WHEN "featuredRank" IS NULL THEN 1 ELSE 0 END, "featuredRank" ASC, "createdAt" DESC');
         return NextResponse.json({ success: true, products }, { status: 200 });
     } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -31,13 +36,14 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
     try {
+        await ensureFeaturedRankColumn();
         const session = await getServerSession(authOptions);
         if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
         }
 
         const body = await req.json();
-        const { name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty } = body;
+        const { name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty, featuredRank } = body;
 
         if (!name || !mode) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -56,15 +62,16 @@ export async function POST(req: Request) {
         const imagesJson = JSON.stringify(extraImages);
 
         await query(
-            `INSERT INTO products (id, name, "imageUrl", images, description, mode, "startPrice", "endTime", "minIncrement", "fixedPrice", "stockQty")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+            `INSERT INTO products (id, name, "imageUrl", images, description, mode, "startPrice", "endTime", "minIncrement", "fixedPrice", "stockQty", "featuredRank")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
                 id, name, imageUrl || null, imagesJson, description || null, mode,
                 mode === "BIDDING" ? (startPrice || 0) : null,
                 endTimeStr,
                 mode === "BIDDING" ? (minIncrement || 1) : null,
                 mode === "STOCK" ? (fixedPrice || 0) : null,
-                mode === "STOCK" ? (stockQty || 0) : null
+                mode === "STOCK" ? (stockQty || 0) : null,
+                featuredRank ? parseInt(featuredRank, 10) : null
             ]
         );
 
@@ -77,13 +84,14 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
     try {
+        await ensureFeaturedRankColumn();
         const session = await getServerSession(authOptions);
         if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
         }
 
         const body = await req.json();
-        const { id, name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty } = body;
+        const { id, name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty, featuredRank } = body;
 
         if (!id || !name || !mode) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -100,7 +108,7 @@ export async function PUT(req: Request) {
         const imagesJson = JSON.stringify(extraImages);
 
         await query(
-            `UPDATE products SET name=$1, "imageUrl"=$2, images=$3, description=$4, mode=$5, "startPrice"=$6, "endTime"=$7, "minIncrement"=$8, "fixedPrice"=$9, "stockQty"=$10 WHERE id=$11`,
+            `UPDATE products SET name=$1, "imageUrl"=$2, images=$3, description=$4, mode=$5, "startPrice"=$6, "endTime"=$7, "minIncrement"=$8, "fixedPrice"=$9, "stockQty"=$10, "featuredRank"=$11 WHERE id=$12`,
             [
                 name, imageUrl || null, imagesJson, description || null, mode,
                 mode === "BIDDING" ? (startPrice || 0) : null,
@@ -108,6 +116,7 @@ export async function PUT(req: Request) {
                 mode === "BIDDING" ? (minIncrement || 1) : null,
                 mode === "STOCK" ? (fixedPrice || 0) : null,
                 mode === "STOCK" ? (stockQty || 0) : null,
+                featuredRank ? parseInt(featuredRank, 10) : null,
                 id
             ]
         );

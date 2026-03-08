@@ -27,6 +27,7 @@ export default function AdminDashboardPage() {
         imageUrl: "",
         description: "",
         secondaryImages: "",
+        featuredRank: "",
         mode: "BIDDING" as "BIDDING" | "STOCK",
         startPrice: "",
         endHours: "24",
@@ -112,6 +113,7 @@ export default function AdminDashboardPage() {
             imageUrl: product.imageUrl || "",
             description: product.description || "",
             secondaryImages: secondaryImagesText,
+            featuredRank: product.featuredRank?.toString() || "",
             mode: product.mode,
             startPrice: product.startPrice?.toString() || "",
             endHours: "24", // Note: Resetting duration for edits for simplicity
@@ -126,7 +128,7 @@ export default function AdminDashboardPage() {
         setIsEditing(false);
         setEditId(null);
         setFormData({
-            name: "", imageUrl: "", description: "", secondaryImages: "",
+            name: "", imageUrl: "", description: "", secondaryImages: "", featuredRank: "",
             mode: "BIDDING", startPrice: "", endHours: "24", minIncrement: "5", fixedPrice: "", stockQty: ""
         });
     };
@@ -158,7 +160,7 @@ export default function AdminDashboardPage() {
             }
 
             setFormData({
-                ...formData, name: "", imageUrl: "", secondaryImages: "", description: "", startPrice: "", fixedPrice: "", stockQty: ""
+                ...formData, name: "", imageUrl: "", secondaryImages: "", description: "", featuredRank: "", startPrice: "", fixedPrice: "", stockQty: ""
             });
 
             fetchProducts();
@@ -271,6 +273,12 @@ export default function AdminDashboardPage() {
                                 <textarea name="description" value={formData.description} onChange={handleChange} className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-2 focus:border-electric-lime outline-none min-h-[100px]" placeholder="Detailed product specifications..." />
                             </div>
 
+                            <div>
+                                <label className="block text-chrome-light font-mono text-xs uppercase mb-1">Homepage Priority</label>
+                                <input type="number" name="featuredRank" value={formData.featuredRank} onChange={handleChange} className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-2 focus:border-electric-lime outline-none" min="1" placeholder="1 shows first on the main page" />
+                                <p className="mt-1 text-[10px] font-mono text-chrome-dark">Leave empty to keep normal newest-first ordering. Lower numbers appear first.</p>
+                            </div>
+
                             <div className="pt-4 border-t border-chrome-dark/30">
                                 <label className="block text-chrome-light font-mono text-xs uppercase mb-2">Engage Mode</label>
                                 <div className="flex gap-4">
@@ -360,6 +368,11 @@ export default function AdminDashboardPage() {
                                             <h3 className="font-bold text-white uppercase text-sm truncate pr-12">{p.name}</h3>
                                         </div>
                                         <div className="font-mono text-xs text-chrome-dark space-y-1">
+                                            {p.featuredRank ? (
+                                                <p>Priority: <span className="text-electric-lime">#{p.featuredRank}</span></p>
+                                            ) : (
+                                                <p>Priority: Standard feed</p>
+                                            )}
                                             {p.mode === 'BIDDING' ? (
                                                 <>
                                                     <p>Start: <span className="text-electric-lime">{p.startPrice} TND</span></p>

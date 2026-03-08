@@ -21,10 +21,7 @@ export default function Nav() {
                     </div>
                     <div className="min-w-0">
                         <p className="truncate font-display text-base font-black uppercase tracking-[0.18em] text-white md:text-lg">
-                            Guapo Drops
-                        </p>
-                        <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-white/35">
-                            Mobile-first registry
+                            Guapdrops
                         </p>
                     </div>
                 </Link>

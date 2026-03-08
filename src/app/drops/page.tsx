@@ -9,9 +9,10 @@ export default async function DropsPage() {
     let products: any[] = [];
 
     try {
+        await query('ALTER TABLE products ADD COLUMN IF NOT EXISTS "featuredRank" INTEGER');
         // Fetch all active products
         products = await query<any[]>(
-            'SELECT * FROM products ORDER BY "createdAt" DESC'
+            'SELECT * FROM products ORDER BY CASE WHEN "featuredRank" IS NULL THEN 1 ELSE 0 END, "featuredRank" ASC, "createdAt" DESC'
         );
     } catch (e) {
         console.error("⛔ DROPS_PAGE_DB_ERROR", e);

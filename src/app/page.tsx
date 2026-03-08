@@ -7,9 +7,10 @@ export default async function Home() {
   let products: any[] = [];
 
   try {
+    await query('ALTER TABLE products ADD COLUMN IF NOT EXISTS "featuredRank" INTEGER');
     // Fetch latest products
     products = await query<any[]>(
-      'SELECT * FROM products ORDER BY "createdAt" DESC LIMIT 12'
+      'SELECT * FROM products ORDER BY CASE WHEN "featuredRank" IS NULL THEN 1 ELSE 0 END, "featuredRank" ASC, "createdAt" DESC LIMIT 12'
     );
   } catch (e) {
     console.error("⛔ HOME_PAGE_DB_ERROR", e);
