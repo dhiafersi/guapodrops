@@ -16,7 +16,7 @@ const fontShareTechMono = Share_Tech_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "guapdrops",
+  title: "GUAPO DROPS",
   description: "High-performance bidding and drops for premium gaming and cyber gear.",
 };
 

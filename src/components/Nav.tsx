@@ -21,7 +21,7 @@ export default function Nav() {
                     </div>
                     <div className="min-w-0">
                         <p className="truncate font-display text-base font-black uppercase tracking-[0.18em] text-white md:text-lg">
-                            Guapdrops
+                            GUAPO DROPS
                         </p>
                     </div>
                 </Link>
