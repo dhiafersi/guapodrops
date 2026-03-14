@@ -17,6 +17,7 @@ export default function ProductCard({
     className = "",
 }: ProductCardProps) {
     const isBidding = product.mode === 'BIDDING';
+    const isSurCommande = product.isSurCommande || product.is_sur_commande;
     const accentColor = isBidding ? "violet" : "teal";
     const glowColor = accentColor === "teal" ? "rgba(0, 242, 255, 0.4)" : "rgba(157, 0, 255, 0.4)";
 
@@ -29,9 +30,16 @@ export default function ProductCard({
             className={`liquid-glass relative overflow-hidden rounded-[2rem] p-4 transition-all duration-500 group md:rounded-3xl md:p-6 ${className}`}
         >
             {/* Badges */}
-            <div className={`absolute right-3 top-3 z-20 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] md:right-4 md:top-4 md:text-[10px] md:tracking-widest ${isBidding ? "bg-bio-violet text-white" : "bg-neon-teal text-black"
-                }`}>
-                {isBidding ? "Bidding" : "In Stock"}
+            <div className="absolute right-3 top-3 z-20 flex flex-col gap-2 items-end md:right-4 md:top-4">
+                <div className={`rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] md:text-[10px] md:tracking-widest ${isBidding ? "bg-bio-violet text-white" : "bg-neon-teal text-black"
+                    }`}>
+                    {isBidding ? "Bidding" : "In Stock"}
+                </div>
+                {isSurCommande && (
+                    <div className="rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] bg-white text-black border border-black/10 md:text-[10px] md:tracking-widest shadow-lg">
+                        Sur Commande
+                    </div>
+                )}
             </div>
 
             {/* Background Glow */}
@@ -80,7 +88,7 @@ export default function ProductCard({
                         ) : (
                             <>
                                 <Package className="w-3 h-3 text-neon-teal" />
-                                [{product.stockQty}] Units Left
+                                {isSurCommande ? 'Sur Commande' : `[${product.stockQty}] Units Left`}
                             </>
                         )}
                     </div>

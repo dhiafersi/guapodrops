@@ -34,6 +34,8 @@ export default function AdminDashboardPage() {
         minIncrement: "5",
         fixedPrice: "",
         stockQty: "",
+        isSurCommande: false,
+        isFeatured: false,
     });
 
     // Basic authorization redirect & dummy initial fetch
@@ -120,6 +122,8 @@ export default function AdminDashboardPage() {
             minIncrement: product.minIncrement?.toString() || "5",
             fixedPrice: product.fixedPrice?.toString() || "",
             stockQty: product.stockQty?.toString() || "",
+            isSurCommande: !!product.isSurCommande,
+            isFeatured: !!product.isFeatured,
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -129,7 +133,8 @@ export default function AdminDashboardPage() {
         setEditId(null);
         setFormData({
             name: "", imageUrl: "", description: "", secondaryImages: "", featuredRank: "",
-            mode: "BIDDING", startPrice: "", endHours: "24", minIncrement: "5", fixedPrice: "", stockQty: ""
+            mode: "BIDDING", startPrice: "", endHours: "24", minIncrement: "5", fixedPrice: "", stockQty: "",
+            isSurCommande: false, isFeatured: false
         });
     };
 
@@ -160,7 +165,7 @@ export default function AdminDashboardPage() {
             }
 
             setFormData({
-                ...formData, name: "", imageUrl: "", secondaryImages: "", description: "", featuredRank: "", startPrice: "", fixedPrice: "", stockQty: ""
+                ...formData, name: "", imageUrl: "", secondaryImages: "", description: "", featuredRank: "", startPrice: "", fixedPrice: "", stockQty: "", isSurCommande: false, isFeatured: false
             });
 
             fetchProducts();
@@ -321,6 +326,43 @@ export default function AdminDashboardPage() {
                                 </div>
                             )}
 
+                            <div className="pt-4 border-t border-chrome-dark/30">
+                                <label className="flex items-center gap-3 cursor-pointer group mb-4">
+                                    <div className="relative">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.isFeatured}
+                                            onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-10 h-5 rounded-full transition-colors ${formData.isFeatured ? 'bg-cyber-purple' : 'bg-zinc-800 border border-chrome-dark/30'}`}></div>
+                                        <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isFeatured ? 'translate-x-5' : ''}`}></div>
+                                    </div>
+                                    <span className={`font-mono text-xs uppercase tracking-widest ${formData.isFeatured ? 'text-cyber-purple' : 'text-chrome-dark'}`}>
+                                        Show First on Main Page (Featured)
+                                    </span>
+                                </label>
+
+                                <label className="flex items-center gap-3 cursor-pointer group">
+                                    <div className="relative">
+                                        <input
+                                            type="checkbox"
+                                            checked={formData.isSurCommande}
+                                            onChange={(e) => setFormData({ ...formData, isSurCommande: e.target.checked })}
+                                            className="sr-only"
+                                        />
+                                        <div className={`w-10 h-5 rounded-full transition-colors ${formData.isSurCommande ? 'bg-electric-lime' : 'bg-zinc-800 border border-chrome-dark/30'}`}></div>
+                                        <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isSurCommande ? 'translate-x-5' : ''}`}></div>
+                                    </div>
+                                    <span className={`font-mono text-xs uppercase tracking-widest ${formData.isSurCommande ? 'text-electric-lime' : 'text-chrome-dark'}`}>
+                                        Sur Commande (Made-to-Order)
+                                    </span>
+                                </label>
+                                <p className="mt-2 text-[10px] font-mono text-chrome-dark leading-tight">
+                                    Enable this for items that are not in stock but can be requested. This will display a "SUR COMMANDE" badge to customers.
+                                </p>
+                            </div>
+
                             <div className="flex gap-2">
                                 {isEditing && (
                                     <button type="button" onClick={cancelEdit} className="flex-1 bg-zinc-800 text-white py-3 text-xs font-display tracking-widest border border-zinc-700">
@@ -365,7 +407,18 @@ export default function AdminDashboardPage() {
                                             <div className={`text-[10px] font-display font-bold px-2 py-0.5 uppercase ${p.mode === 'BIDDING' ? 'bg-cyber-purple text-white' : 'bg-electric-lime text-black'}`}>
                                                 {p.mode}
                                             </div>
+                                            {p.isSurCommande && (
+                                                <div className="text-[10px] font-display font-bold px-2 py-0.5 uppercase bg-white text-black">
+                                                    SUR COMMANDE
+                                                </div>
+                                            )}
+                                            {p.isFeatured && (
+                                                <div className="text-[10px] font-display font-bold px-2 py-0.5 uppercase bg-cyber-purple text-white shadow-[0_0_10px_#bc13fe]">
+                                                    FEATURED
+                                                </div>
+                                            )}
                                             <h3 className="font-bold text-white uppercase text-sm truncate pr-12">{p.name}</h3>
+
                                         </div>
                                         <div className="font-mono text-xs text-chrome-dark space-y-1">
                                             {p.featuredRank ? (

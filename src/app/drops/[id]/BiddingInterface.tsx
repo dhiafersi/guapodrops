@@ -105,11 +105,20 @@ export default function BiddingInterface({ product }: { product: any }) {
                     </div>
                 ) : (
                     <div className="flex flex-col gap-1 md:items-end">
-                        <div className="flex items-center gap-2 text-neon-teal">
-                            <Zap className="w-3 h-3" />
-                            <span className="font-mono text-[10px] uppercase tracking-widest font-bold">In Stock</span>
+                        <div className={`flex items-center gap-2 ${product.isSurCommande ? 'text-white' : 'text-neon-teal'}`}>
+                            {product.isSurCommande ? (
+                                <ShoppingCart className="w-3 h-3" />
+                            ) : (
+                                <Zap className="w-3 h-3" />
+                            )}
+                            <span className="font-mono text-[10px] uppercase tracking-widest font-bold">
+                                {product.isSurCommande ? 'Sur Commande' : 'In Stock'}
+                            </span>
                         </div>
-                        <p className="text-2xl font-black text-white">{product.stockQty} <span className="text-[10px] text-chrome-dark uppercase font-mono">Available</span></p>
+                        <p className="text-2xl font-black text-white">
+                            {product.isSurCommande ? 'AVAILABLE' : `${product.stockQty}`}
+                            {!product.isSurCommande && <span className="text-[10px] text-chrome-dark uppercase font-mono ml-1">Available</span>}
+                        </p>
                     </div>
                 )}
             </div>
@@ -153,7 +162,7 @@ export default function BiddingInterface({ product }: { product: any }) {
 
                 <MagneticButton
                     onClick={(e: any) => handleAction(e)}
-                    disabled={isEnded || loading || (!isBidding && product.stockQty <= 0)}
+                    disabled={isEnded || loading || (!isBidding && !product.isSurCommande && product.stockQty <= 0)}
                     className={`w-full rounded-2xl py-4 font-black text-[10px] uppercase tracking-[0.28em] transition-all md:py-5 md:text-xs md:tracking-[0.3em] ${isBidding
                         ? 'bg-bio-violet text-white hover:brightness-110'
                         : 'bg-neon-teal text-black hover:brightness-110'
@@ -161,7 +170,7 @@ export default function BiddingInterface({ product }: { product: any }) {
                 >
                     {loading ? "Processing..." :
                         isBidding ? (isEnded ? "Auction Ended" : "Place Bid") :
-                            (product.stockQty <= 0 ? "Out of Stock" : "Add to Cart")}
+                            (product.stockQty <= 0 && !product.isSurCommande ? "Out of Stock" : "Add to Cart")}
                 </MagneticButton>
             </form>
         </div>

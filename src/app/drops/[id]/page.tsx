@@ -23,6 +23,7 @@ export default async function DropDetailPage({ params }: { params: Promise<{ id:
     product.minIncrement = product.min_increment ?? product.minIncrement;
     product.fixedPrice = product.fixed_price ?? product.fixedPrice;
     product.stockQty = product.stock_qty ?? product.stockQty;
+    product.isSurCommande = product.is_sur_commande ?? product.isSurCommande;
     const isBidding = product.mode === 'BIDDING';
 
     // Parse extra images from JSON column
