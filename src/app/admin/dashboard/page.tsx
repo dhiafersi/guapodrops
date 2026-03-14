@@ -319,10 +319,12 @@ export default function AdminDashboardPage() {
                                         <label className="block text-electric-lime font-mono text-xs uppercase mb-1">Fixed Price (TND)</label>
                                         <input required type="number" name="fixedPrice" value={formData.fixedPrice} onChange={handleChange} className="w-full bg-black/50 border border-electric-lime/50 text-white font-mono p-2 focus:border-electric-lime outline-none" />
                                     </div>
-                                    <div>
-                                        <label className="block text-electric-lime font-mono text-xs uppercase mb-1">Stock Quantity</label>
-                                        <input required type="number" name="stockQty" value={formData.stockQty} onChange={handleChange} className="w-full bg-black/50 border border-electric-lime/50 text-white font-mono p-2 focus:border-electric-lime outline-none" min="1" />
-                                    </div>
+                                    {!formData.isSurCommande && (
+                                        <div>
+                                            <label className="block text-electric-lime font-mono text-xs uppercase mb-1">Stock Quantity</label>
+                                            <input required type="number" name="stockQty" value={formData.stockQty} onChange={handleChange} className="w-full bg-black/50 border border-electric-lime/50 text-white font-mono p-2 focus:border-electric-lime outline-none" min="1" />
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -434,7 +436,7 @@ export default function AdminDashboardPage() {
                                             ) : (
                                                 <>
                                                     <p>Price: <span className="text-electric-lime">{p.fixedPrice} TND</span></p>
-                                                    <p>Stock: {p.stockQty} Units</p>
+                                                    <p>Stock: {p.isSurCommande ? "Sur Commande" : `${p.stockQty} Units`}</p>
                                                 </>
                                             )}
                                         </div>
