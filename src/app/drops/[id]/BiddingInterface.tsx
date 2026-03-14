@@ -112,7 +112,7 @@ export default function BiddingInterface({ product }: { product: any }) {
                                 <Zap className="w-3 h-3" />
                             )}
                             <span className="font-mono text-[10px] uppercase tracking-widest font-bold">
-                                {product.isSurCommande ? 'Sur Commande' : 'In Stock'}
+                                {product.isSurCommande ? 'On Order' : 'In Stock'}
                             </span>
                         </div>
                         <p className="text-2xl font-black text-white">

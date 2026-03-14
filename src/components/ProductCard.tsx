@@ -34,16 +34,17 @@ export default function ProductCard({
                 <div className={`rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-[0.22em] shadow-lg md:text-[10px] md:tracking-widest ${
                     isBidding ? "bg-bio-violet text-white" : isSurCommande ? "bg-white text-black border border-black/10" : "bg-neon-teal text-black"
                 }`}>
-                    {isBidding ? "Bidding" : isSurCommande ? "Sur Commande" : "In Stock"}
+                    {isBidding ? "Bidding" : isSurCommande ? "On Order" : "In Stock"}
                 </div>
             </div>
 
-            {/* Background Glow */}
+            {/* Background Glow - hidden on mobile for performance */}
             <div
-                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"
+                className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none hidden md:block"
                 style={{
                     background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 70%)`,
-                    filter: "blur(40px)"
+                    filter: "blur(40px)",
+                    willChange: "opacity"
                 }}
             />
 
@@ -84,7 +85,7 @@ export default function ProductCard({
                         ) : (
                             <>
                                 <Package className="w-3 h-3 text-neon-teal" />
-                                {isSurCommande ? 'Sur Commande' : `[${product.stockQty}] Units Left`}
+                                {isSurCommande ? 'On Order' : `[${product.stockQty}] Units Left`}
                             </>
                         )}
                     </div>

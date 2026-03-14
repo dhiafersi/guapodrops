@@ -18,6 +18,7 @@ export default function CyberLanding({ products }: CyberLandingProps) {
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
+            if (window.innerWidth < 768) return; // Disable on mobile to prevent lag
             const { innerWidth, innerHeight } = window;
             const x = (e.clientX - innerWidth / 2) / 25;
             const y = (e.clientY - innerHeight / 2) / 25;
@@ -25,7 +26,9 @@ export default function CyberLanding({ products }: CyberLandingProps) {
             mouseY.set(y);
         };
 
-        window.addEventListener("mousemove", handleMouseMove);
+        if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+            window.addEventListener("mousemove", handleMouseMove);
+        }
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, [mouseX, mouseY]);
 

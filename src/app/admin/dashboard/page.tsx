@@ -357,11 +357,11 @@ export default function AdminDashboardPage() {
                                         <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isSurCommande ? 'translate-x-5' : ''}`}></div>
                                     </div>
                                     <span className={`font-mono text-xs uppercase tracking-widest ${formData.isSurCommande ? 'text-electric-lime' : 'text-chrome-dark'}`}>
-                                        Sur Commande (Made-to-Order)
+                                        On Order
                                     </span>
                                 </label>
                                 <p className="mt-2 text-[10px] font-mono text-chrome-dark leading-tight">
-                                    Enable this for items that are not in stock but can be requested. This will display a "SUR COMMANDE" badge to customers.
+                                    Enable this for items that are not in stock but can be requested. This will display a "ON ORDER" badge to customers.
                                 </p>
                             </div>
 
@@ -411,7 +411,7 @@ export default function AdminDashboardPage() {
                                             </div>
                                             {p.isSurCommande && (
                                                 <div className="text-[10px] font-display font-bold px-2 py-0.5 uppercase bg-white text-black">
-                                                    SUR COMMANDE
+                                                    ON ORDER
                                                 </div>
                                             )}
                                             {p.isFeatured && (
@@ -436,7 +436,7 @@ export default function AdminDashboardPage() {
                                             ) : (
                                                 <>
                                                     <p>Price: <span className="text-electric-lime">{p.fixedPrice} TND</span></p>
-                                                    <p>Stock: {p.isSurCommande ? "Sur Commande" : `${p.stockQty} Units`}</p>
+                                                    <p>Stock: {p.isSurCommande ? "On Order" : `${p.stockQty} Units`}</p>
                                                 </>
                                             )}
                                         </div>

@@ -13,11 +13,14 @@ export default function FloatingGlow() {
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
+            if (window.innerWidth < 768) return; // Disable on mobile
             mouseX.set(e.clientX);
             mouseY.set(e.clientY);
         };
 
-        window.addEventListener("mousemove", handleMouseMove);
+        if (typeof window !== "undefined" && window.innerWidth >= 768) {
+            window.addEventListener("mousemove", handleMouseMove);
+        }
         return () => window.removeEventListener("mousemove", handleMouseMove);
     }, [mouseX, mouseY]);
 
@@ -31,7 +34,7 @@ export default function FloatingGlow() {
                     translateX: "-50%",
                     translateY: "-50%",
                 }}
-                className="absolute w-[600px] h-[600px] rounded-full opacity-20 glow-teal"
+                className="absolute w-[600px] h-[600px] rounded-full opacity-20 glow-teal hidden md:block"
                 animate={{
                     scale: [1, 1.2, 1],
                 }}
@@ -50,7 +53,7 @@ export default function FloatingGlow() {
                     translateX: "-30%",
                     translateY: "-40%",
                 }}
-                className="absolute w-[500px] h-[500px] rounded-full opacity-15 glow-violet"
+                className="absolute w-[500px] h-[500px] rounded-full opacity-15 glow-violet hidden md:block"
                 animate={{
                     scale: [1.2, 1, 1.2],
                 }}
@@ -62,8 +65,8 @@ export default function FloatingGlow() {
             />
 
             {/* Static Accent Glows */}
-            <div className="absolute top-1/4 -left-20 w-[800px] h-[800px] rounded-full bg-neon-teal/5 blur-[120px]" />
-            <div className="absolute bottom-1/4 -right-20 w-[800px] h-[800px] rounded-full bg-bio-violet/5 blur-[120px]" />
+            <div className="absolute top-1/4 -left-20 w-[800px] h-[800px] rounded-full bg-neon-teal/5 blur-[120px] hidden md:block" />
+            <div className="absolute bottom-1/4 -right-20 w-[800px] h-[800px] rounded-full bg-bio-violet/5 blur-[120px] hidden md:block" />
         </div>
     );
 }
