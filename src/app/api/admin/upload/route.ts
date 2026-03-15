@@ -1,18 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
+    console.log("[UPLOAD_DEBUG] Received upload request (Supabase Mode)");
     try {
         // Auth check
         const session = await getServerSession(authOptions);
+        console.log("[UPLOAD_DEBUG] Auth checked, session:", !!session);
         if (!session || (session.user as any).role !== "ADMIN") {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        console.log("[UPLOAD_DEBUG] Parsing form data...");
         const formData = await req.formData();
+        console.log("[UPLOAD_DEBUG] Form data parsed");
         const file = formData.get("file") as File | null;
 
         if (!file) {
@@ -37,13 +40,32 @@ export async function POST(req: NextRequest) {
         const ext = file.name.split(".").pop() || "jpg";
         const filename = `upload_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
-        const uploadDir = path.join(process.cwd(), "public", "uploads");
-        await mkdir(uploadDir, { recursive: true });
+        console.log("[UPLOAD_DEBUG] Uploading to Supabase bucket 'products'...");
+        
+        // Using 'products' bucket - make sure it's public in Supabase dashboard
+        const { data, error: uploadError } = await supabase.storage
+            .from('products')
+            .upload(filename, buffer, {
+                contentType: file.type,
+                upsert: false
+            });
 
-        const filePath = path.join(uploadDir, filename);
-        await writeFile(filePath, buffer);
+        if (uploadError) {
+            console.error("[SUPABASE_STORAGE_ERROR]", uploadError);
+            // Try fallback to 'product-images' if 'products' doesn't exist?
+            // For now, let's just report the error clearly.
+            return NextResponse.json({ 
+                error: "Storage upload failed. Ensure 'products' bucket exists in Supabase.", 
+                details: uploadError.message 
+            }, { status: 500 });
+        }
 
-        const publicUrl = `/uploads/${filename}`;
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+            .from('products')
+            .getPublicUrl(filename);
+
+        console.log("[UPLOAD_DEBUG] Upload successful:", publicUrl);
         return NextResponse.json({ url: publicUrl });
     } catch (error: any) {
         console.error("[UPLOAD_ERROR]", error);
