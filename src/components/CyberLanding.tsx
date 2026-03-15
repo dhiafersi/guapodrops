@@ -7,6 +7,7 @@ import MagneticButton from "@/components/MagneticButton";
 import ProductCard from "@/components/ProductCard";
 import FloatingGlow from "@/components/FloatingGlow";
 import { Zap } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface CyberLandingProps {
     products: any[];
