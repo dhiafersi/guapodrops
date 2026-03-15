@@ -19,7 +19,7 @@ export default function CartSidebar() {
     const { data: session } = useSession();
     const cartItems = data?.items || [];
 
-    if (isAuthPage) return null;
+
 
     const removeItem = async (id: string) => {
         await fetch(`/api/cart?id=${id}`, { method: "DELETE" });
@@ -60,6 +60,8 @@ export default function CartSidebar() {
     };
 
     const total = cartItems.reduce((acc: number, item: any) => acc + (item.fixedPrice * item.quantity), 0);
+
+    if (isAuthPage) return null;
 
     return (
         <>
