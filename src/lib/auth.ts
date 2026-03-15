@@ -118,7 +118,7 @@ export const authOptions: NextAuthOptions = {
                 }
             } catch (error) {
                 console.error("[NEXTAUTH_JWT_ERROR]", error);
-                throw error;
+                // Don't re-throw - allow login to proceed even if DB write fails
             }
 
             return token;
