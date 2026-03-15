@@ -98,6 +98,8 @@ export const authOptions: NextAuthOptions = {
                     token.email = dbUser.email;
                     token.phone = dbUser.phone;
                     token.location = dbUser.location;
+                    // Flag if profile is incomplete (no phone/location yet)
+                    (token as any).needsProfileCompletion = !dbUser.phone || !dbUser.location;
                 } else if (user) {
                     // Standard Credentials login
                     token.role = (user as any).role;
@@ -129,11 +131,13 @@ export const authOptions: NextAuthOptions = {
                 (session.user as any).id = token.id;
                 (session.user as any).phone = token.phone;
                 (session.user as any).location = token.location;
+                (session.user as any).needsProfileCompletion = (token as any).needsProfileCompletion;
             }
             return session;
         }
     },
     pages: {
         signIn: "/auth/login",
+        newUser: "/auth/complete-profile",
     }
 };
