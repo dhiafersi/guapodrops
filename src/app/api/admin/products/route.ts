@@ -28,7 +28,7 @@ export async function GET(req: Request) {
             return NextResponse.json({ product: products[0] });
         }
 
-        const products = await query<any[]>('SELECT * FROM products ORDER BY "isFeatured" DESC NULLS LAST, CASE WHEN "featuredRank" IS NULL THEN 1 ELSE 0 END, "featuredRank" ASC, "createdAt" DESC');
+        const products = await query<any[]>('SELECT * FROM products ORDER BY "featuredRank" ASC NULLS LAST, "isFeatured" DESC, "createdAt" DESC');
         return NextResponse.json({ success: true, products }, { status: 200 });
     } catch (error) {
         console.error("Failed to fetch products:", error);

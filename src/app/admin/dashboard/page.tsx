@@ -2,17 +2,18 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Package, Gavel, Trash2, ShoppingBag, Phone, MapPin, CheckCircle, Clock, Truck, XCircle, Edit, Plus } from "lucide-react";
+import { Package, Gavel, Trash2, ShoppingBag, Phone, MapPin, CheckCircle, Clock, Truck, XCircle, Edit, Plus, MoveVertical, Save } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Reorder } from "framer-motion";
 import ImageUploader from "@/components/ImageUploader";
 import MultiImageUploader from "@/components/MultiImageUploader";
 
-// Admin Dashboard - V4 (Full Product Management & Orders)
+// Admin Dashboard - V4 (Full Product Management, Orders & Sorting)
 export default function AdminDashboardPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
-    const [activeTab, setActiveTab] = useState<"PRODUCTS" | "ORDERS">("PRODUCTS");
+    const [activeTab, setActiveTab] = useState<"PRODUCTS" | "ORDERS" | "SORTING">("PRODUCTS");
     const [stats, setStats] = useState({ bids: 0, products: 0 });
     const [products, setProducts] = useState<any[]>([]);
     const [orders, setOrders] = useState<any[]>([]);
@@ -138,6 +139,28 @@ export default function AdminDashboardPage() {
         });
     };
 
+    const handleReorderSave = async () => {
+        setLoading(true);
+        setMessage("");
+        try {
+            const res = await fetch("/api/admin/products/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ productIds: products.map(p => p.id) })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Save failed");
+
+            setMessage("SUCCESS: Registry ranks synchronized.");
+            fetchProducts();
+        } catch (err: any) {
+            setMessage(`ERROR: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
@@ -221,6 +244,12 @@ export default function AdminDashboardPage() {
                         className={`px-4 py-2 font-display text-xs tracking-widest border transition-all ${activeTab === 'ORDERS' ? 'bg-cyber-purple text-white border-cyber-purple shadow-[0_0_10px_#BC13FE]' : 'text-chrome-dark border-chrome-dark/30 hover:border-chrome-light'}`}
                     >
                         ACQUISITIONS ({orders.length})
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("SORTING")}
+                        className={`px-4 py-2 font-display text-xs tracking-widest border transition-all ${activeTab === 'SORTING' ? 'bg-white text-black border-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-chrome-dark border-chrome-dark/30 hover:border-chrome-light'}`}
+                    >
+                        SORTING
                     </button>
                 </div>
             </header>
@@ -446,7 +475,7 @@ export default function AdminDashboardPage() {
                         )}
                     </div>
                 </div>
-            ) : (
+            ) : activeTab === "ORDERS" ? (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {orders.length === 0 ? (
                         <div className="glass-panel py-20 text-center opacity-30">
@@ -538,6 +567,64 @@ export default function AdminDashboardPage() {
                                 </div>
                             </div>
                         ))
+                    )}
+                </div>
+            ) : (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
+                    <div className="flex justify-between items-center mb-4">
+                        <div>
+                            <h2 className="text-xl font-display font-bold text-white uppercase">Product Sequencer</h2>
+                            <p className="text-chrome-dark font-mono text-[10px] uppercase tracking-widest mt-1">Drag items to define homepage priority</p>
+                        </div>
+                        <button
+                            onClick={handleReorderSave}
+                            disabled={loading}
+                            className="bg-electric-lime text-black px-6 py-2 font-display text-xs font-bold tracking-widest flex items-center gap-2 hover:bg-[#bbf000] transition-colors disabled:opacity-50"
+                        >
+                            <Save className="w-4 h-4" />
+                            {loading ? "SYNCING..." : "COMMIT ORDER"}
+                        </button>
+                    </div>
+
+                    {message && (
+                        <div className={`p-3 mb-4 text-xs font-mono border ${message.startsWith("ERROR") ? "border-red-500 text-red-500" : "border-electric-lime text-electric-lime"} bg-black/50 text-center`}>
+                            {message}
+                        </div>
+                    )}
+
+                    <Reorder.Group axis="y" values={products} onReorder={setProducts} className="space-y-3">
+                        {products.map((product) => (
+                            <Reorder.Item
+                                key={product.id}
+                                value={product}
+                                className="glass-panel p-4 border border-chrome-dark/30 bg-zinc-950/50 flex items-center gap-4 cursor-grab active:cursor-grabbing hover:border-electric-lime/50 transition-colors"
+                            >
+                                <div className="flex-shrink-0 text-chrome-dark">
+                                    <MoveVertical className="w-5 h-5" />
+                                </div>
+                                <div className="w-12 h-12 bg-black border border-chrome-dark/20 flex items-center justify-center overflow-hidden shrink-0">
+                                    <img src={product.imageUrl} alt="" className="w-full h-full object-contain" />
+                                </div>
+                                <div className="flex-grow min-w-0">
+                                    <h4 className="text-sm font-bold text-white uppercase truncate">{product.name}</h4>
+                                    <p className="text-[10px] font-mono text-chrome-dark uppercase tracking-tighter">
+                                        Current Rank: <span className="text-electric-lime">#{product.featuredRank || 'Unset'}</span> • {product.mode}
+                                    </p>
+                                </div>
+                                <div className="text-right flex-shrink-0">
+                                    <p className="text-xs font-display font-bold text-white">
+                                        {product.mode === 'STOCK' ? product.fixedPrice : product.startPrice} TND
+                                    </p>
+                                </div>
+                            </Reorder.Item>
+                        ))}
+                    </Reorder.Group>
+
+                    {products.length === 0 && (
+                        <div className="glass-panel py-20 text-center opacity-30">
+                            <Package className="w-12 h-12 mx-auto mb-4" />
+                            <p className="font-mono text-xs uppercase tracking-widest">Registry is empty.</p>
+                        </div>
                     )}
                 </div>
             )}
