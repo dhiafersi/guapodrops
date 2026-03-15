@@ -26,8 +26,17 @@ export default function ImageUploader({ label, currentUrl, onUploaded }: ImageUp
 
         try {
             const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Upload failed");
+            
+            let data;
+            const contentType = res.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                throw new Error(`Server Error (${res.status}): ${text.slice(0, 100)}`);
+            }
+
+            if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
             setPreview(data.url);
             onUploaded(data.url);
         } catch (e: any) {

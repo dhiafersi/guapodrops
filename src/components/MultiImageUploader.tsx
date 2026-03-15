@@ -59,8 +59,17 @@ export default function MultiImageUploader({ label, currentUrls, onChanged }: Mu
         const form = new FormData();
         form.append("file", file);
         const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Upload failed");
+        
+        let data;
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            data = await res.json();
+        } else {
+            const text = await res.text();
+            throw new Error(`Server Error (${res.status}): ${text.slice(0, 100)}`);
+        }
+
+        if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
         return data.url as string;
     };
 

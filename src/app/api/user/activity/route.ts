@@ -30,7 +30,7 @@ export async function GET(req: Request) {
             o.status, 
             o."createdAt",
             COALESCE(STRING_AGG(p.name, ', '), 'Order Package') as "productName",
-            SUM(oi.quantity) as "quantity"
+            COALESCE(SUM(oi.quantity), 0) as "quantity"
         FROM orders o
         LEFT JOIN order_items oi ON o.id = oi."orderId"
         LEFT JOIN products p ON oi."productId" = p.id
