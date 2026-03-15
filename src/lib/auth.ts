@@ -71,42 +71,52 @@ export const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async jwt({ token, user, trigger, session, account }) {
-            // Determine if logging in via Google
-            if (account?.provider === "google" && user) {
-                // Find existing user by email
-                let dbUsers = await query<UserRow[]>('SELECT * FROM users WHERE email = ? LIMIT 1', [user.email]);
+            try {
+                // Determine if logging in via Google
+                if (account?.provider === "google" && user) {
+                    console.log("[NEXTAUTH] Google login detected for:", user.email);
+                    // Find existing user by email
+                    let dbUsers = await query<UserRow[]>('SELECT * FROM users WHERE email = ? LIMIT 1', [user.email]);
 
-                if (dbUsers.length === 0) {
-                    const id = "USER_" + Date.now().toString() + Math.random().toString(36).substring(2, 6).toUpperCase();
-                    await query(
-                        'INSERT INTO users (id, name, email, role) VALUES (?, ?, ?, ?)',
-                        [id, user.name || 'Google User', user.email, 'USER']
-                    );
-                    dbUsers = [{ id, name: user.name as string, email: user.email as string, role: 'USER' }];
+                    if (dbUsers.length === 0) {
+                        console.log("[NEXTAUTH] New Google user, inserting into DB...");
+                        const id = "USER_" + Date.now().toString() + Math.random().toString(36).substring(2, 6).toUpperCase();
+                        await query(
+                            'INSERT INTO users (id, name, email, phone, location, role) VALUES (?, ?, ?, ?, ?, ?)',
+                            [id, user.name || 'Google User', user.email, '', '', 'USER']
+                        );
+                        console.log("[NEXTAUTH] Google user inserted successfully.");
+                        dbUsers = [{ id, name: user.name as string, email: user.email as string, role: 'USER' }];
+                    } else {
+                        console.log("[NEXTAUTH] Existing user found in DB, logging in.");
+                    }
+
+                    const dbUser = dbUsers[0];
+                    token.role = dbUser.role;
+                    token.id = dbUser.id;
+                    token.name = dbUser.name;
+                    token.email = dbUser.email;
+                    token.phone = dbUser.phone;
+                    token.location = dbUser.location;
+                } else if (user) {
+                    // Standard Credentials login
+                    token.role = (user as any).role;
+                    token.id = user.id;
+                    token.name = user.name;
+                    token.email = user.email;
+                    token.phone = (user as any).phone;
+                    token.location = (user as any).location;
                 }
 
-                const dbUser = dbUsers[0];
-                token.role = dbUser.role;
-                token.id = dbUser.id;
-                token.name = dbUser.name;
-                token.email = dbUser.email;
-                token.phone = dbUser.phone;
-                token.location = dbUser.location;
-            } else if (user) {
-                // Standard Credentials login
-                token.role = (user as any).role;
-                token.id = user.id;
-                token.name = user.name;
-                token.email = user.email;
-                token.phone = (user as any).phone;
-                token.location = (user as any).location;
-            }
-
-            if (trigger === "update" && session?.user) {
-                token.name = session.user.name;
-                token.email = session.user.email;
-                token.phone = (session.user as any).phone;
-                token.location = (session.user as any).location;
+                if (trigger === "update" && session?.user) {
+                    token.name = session.user.name;
+                    token.email = session.user.email;
+                    token.phone = (session.user as any).phone;
+                    token.location = (session.user as any).location;
+                }
+            } catch (error) {
+                console.error("[NEXTAUTH_JWT_ERROR]", error);
+                throw error;
             }
 
             return token;
