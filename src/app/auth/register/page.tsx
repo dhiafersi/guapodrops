@@ -44,7 +44,7 @@ export default function RegisterPage() {
                 if (loginResult?.error) {
                     router.push("/auth/login?registered=true");
                 } else {
-                    router.push("/dashboard");
+                    router.push("/");
                     router.refresh();
                 }
             }

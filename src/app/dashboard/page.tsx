@@ -2,7 +2,7 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { PackageOpen, Clock, Gamepad2, UserRound, Save } from "lucide-react";
+import { PackageOpen, Clock, Gamepad2, UserRound, Save, Pencil } from "lucide-react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -39,6 +39,7 @@ export default function UserDashboardPage() {
         phone: "",
         location: "",
     });
+    const [savedProfile, setSavedProfile] = useState<ProfileForm>({ name: "", email: "", phone: "", location: "" });
     const [profileMessage, setProfileMessage] = useState("");
     const [savingProfile, setSavingProfile] = useState(false);
 
@@ -52,12 +53,14 @@ export default function UserDashboardPage() {
             return;
         }
 
-        setProfile({
+        const loaded = {
             name: session.user.name ?? "",
             email: session.user.email ?? "",
-            phone: session.user.phone ?? "",
-            location: session.user.location ?? "",
-        });
+            phone: (session.user as any).phone ?? "",
+            location: (session.user as any).location ?? "",
+        };
+        setProfile(loaded);
+        setSavedProfile(loaded);
 
         void fetchUserActivity();
     }, [session, status, router]);
@@ -111,12 +114,14 @@ export default function UserDashboardPage() {
                 },
             });
 
-            setProfile({
+            const updated = {
                 name: data.user.name,
                 email: data.user.email,
                 phone: data.user.phone ?? "",
                 location: data.user.location ?? "",
-            });
+            };
+            setProfile(updated);
+            setSavedProfile(updated);
             setProfileMessage("PROFILE_UPDATED");
         } catch (error) {
             const message =
@@ -126,6 +131,13 @@ export default function UserDashboardPage() {
             setSavingProfile(false);
         }
     };
+
+    // Detect if any field has changed from the saved state
+    const isDirty =
+        profile.name !== savedProfile.name ||
+        profile.email !== savedProfile.email ||
+        profile.phone !== savedProfile.phone ||
+        profile.location !== savedProfile.location;
 
     if (status === "loading" || !session) {
         return (
@@ -152,67 +164,88 @@ export default function UserDashboardPage() {
             </header>
 
             <div className="glass-panel p-6 border border-white/10">
-                <div className="flex items-center gap-2 border-b border-chrome-dark/30 pb-3 mb-6">
-                    <UserRound className="w-5 h-5 text-neon-teal" />
-                    <h2 className="text-xl font-display font-bold uppercase text-white">
-                        Profile Settings
-                    </h2>
+                <div className="flex items-center justify-between border-b border-chrome-dark/30 pb-3 mb-6">
+                    <div className="flex items-center gap-2">
+                        <UserRound className="w-5 h-5 text-neon-teal" />
+                        <h2 className="text-xl font-display font-bold uppercase text-white">
+                            Profile Settings
+                        </h2>
+                    </div>
+                    {isDirty && (
+                        <span className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-widest text-electric-lime animate-pulse">
+                            <Pencil className="w-3 h-3" /> Editing...
+                        </span>
+                    )}
                 </div>
 
                 <form onSubmit={handleProfileSubmit} className="space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input
-                            required
-                            name="name"
-                            value={profile.name}
-                            onChange={handleProfileChange}
-                            placeholder="Full Name"
-                            className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none"
-                        />
-                        <input
-                            required
-                            type="email"
-                            name="email"
-                            value={profile.email}
-                            onChange={handleProfileChange}
-                            placeholder="Email"
-                            className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none"
-                        />
-                        <input
-                            required
-                            name="phone"
-                            value={profile.phone}
-                            onChange={handleProfileChange}
-                            placeholder="Phone Number"
-                            className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none"
-                        />
-                        <input
-                            required
-                            name="location"
-                            value={profile.location}
-                            onChange={handleProfileChange}
-                            placeholder="Location"
-                            className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none"
-                        />
+                        <div className="space-y-1">
+                            <label className="font-mono text-[9px] uppercase tracking-widest text-chrome-dark ml-1">Full Name</label>
+                            <input
+                                required
+                                name="name"
+                                value={profile.name}
+                                onChange={handleProfileChange}
+                                placeholder="Full Name"
+                                className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none transition-colors"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="font-mono text-[9px] uppercase tracking-widest text-chrome-dark ml-1">Email</label>
+                            <input
+                                required
+                                type="email"
+                                name="email"
+                                value={profile.email}
+                                onChange={handleProfileChange}
+                                placeholder="Email"
+                                className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none transition-colors"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="font-mono text-[9px] uppercase tracking-widest text-chrome-dark ml-1">Phone Number</label>
+                            <input
+                                required
+                                name="phone"
+                                value={profile.phone}
+                                onChange={handleProfileChange}
+                                placeholder="+216 -- --- ---"
+                                className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none transition-colors"
+                            />
+                        </div>
+                        <div className="space-y-1">
+                            <label className="font-mono text-[9px] uppercase tracking-widest text-chrome-dark ml-1">Location</label>
+                            <input
+                                required
+                                name="location"
+                                value={profile.location}
+                                onChange={handleProfileChange}
+                                placeholder="e.g. Tunis"
+                                className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none transition-colors"
+                            />
+                        </div>
                     </div>
 
                     <div className="flex items-center justify-between gap-4">
                         <p className="font-mono text-[10px] uppercase tracking-widest text-chrome-dark">
-                            Update your account identity and contact details.
+                            {isDirty ? "You have unsaved changes." : "Your profile is up to date."}
                         </p>
-                        <button
-                            type="submit"
-                            disabled={savingProfile}
-                            className="inline-flex items-center gap-2 border border-electric-lime bg-electric-lime/10 px-4 py-2 font-mono text-xs uppercase tracking-widest text-electric-lime disabled:opacity-50"
-                        >
-                            <Save className="w-4 h-4" />
-                            {savingProfile ? "Saving..." : "Save Profile"}
-                        </button>
+                        {isDirty && (
+                            <button
+                                type="submit"
+                                disabled={savingProfile}
+                                className="inline-flex items-center gap-2 border border-electric-lime bg-electric-lime/10 px-4 py-2 font-mono text-xs uppercase tracking-widest text-electric-lime disabled:opacity-50 hover:bg-electric-lime/20 transition-all"
+                            >
+                                <Save className="w-4 h-4" />
+                                {savingProfile ? "Saving..." : "Save Settings"}
+                            </button>
+                        )}
                     </div>
 
                     {profileMessage && (
                         <p className={`font-mono text-[10px] uppercase tracking-widest ${profileMessage.startsWith("ERROR") ? "text-red-400" : "text-electric-lime"}`}>
-                            {profileMessage}
+                            {profileMessage === "PROFILE_UPDATED" ? "✓ Profile saved successfully." : profileMessage}
                         </p>
                     )}
                 </form>

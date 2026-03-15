@@ -43,7 +43,7 @@ export default function CompleteProfilePage() {
             } else {
                 // Refresh the session so new phone/location show up in token
                 await update({ user: { phone, location } });
-                router.push("/dashboard");
+                router.push("/");
             }
         } catch {
             setError("Something went wrong. Please try again.");

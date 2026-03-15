@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ShoppingCart, X, Trash2, PackageCheck } from "lucide-react";
+import { useState } from "react";
+import { ShoppingCart, X, Trash2, PackageCheck, AlertTriangle, UserRound } from "lucide-react";
 import useSWR, { mutate } from "swr";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function CartSidebar() {
     const [isOpen, setIsOpen] = useState(false);
+    const [showProfilePrompt, setShowProfilePrompt] = useState(false);
     const { data } = useSWR("/api/cart", fetcher);
+    const { data: session } = useSession();
     const cartItems = data?.items || [];
 
     const removeItem = async (id: string) => {
@@ -18,6 +22,16 @@ export default function CartSidebar() {
 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
+
+    const handlePlaceOrder = () => {
+        const user = session?.user as any;
+        const missingInfo = !user?.phone || !user?.location || !user?.email;
+        if (missingInfo) {
+            setShowProfilePrompt(true);
+            return;
+        }
+        finalizeAcquisition();
+    };
 
     const finalizeAcquisition = async () => {
         setLoading(true);
@@ -62,6 +76,40 @@ export default function CartSidebar() {
                     className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] transition-opacity"
                     onClick={() => setIsOpen(false)}
                 />
+            )}
+
+            {/* Profile Incomplete Modal */}
+            {showProfilePrompt && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setShowProfilePrompt(false)} />
+                    <div className="relative liquid-glass w-full max-w-sm p-8 rounded-[2rem] border border-white/10 space-y-6 text-center">
+                        <div className="w-14 h-14 bg-bio-violet/10 border border-bio-violet/30 rounded-2xl flex items-center justify-center mx-auto">
+                            <AlertTriangle className="w-7 h-7 text-bio-violet" />
+                        </div>
+                        <div>
+                            <h3 className="font-black text-xl uppercase tracking-tight text-white mb-2">Profile Incomplete</h3>
+                            <p className="font-mono text-[11px] text-chrome-dark uppercase tracking-wider leading-relaxed">
+                                You need to add your <span className="text-white">phone number</span> and <span className="text-white">location</span> before placing an order.
+                            </p>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <Link
+                                href="/dashboard"
+                                onClick={() => { setShowProfilePrompt(false); setIsOpen(false); }}
+                                className="flex items-center justify-center gap-2 w-full py-3 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-xl"
+                            >
+                                <UserRound className="w-4 h-4" />
+                                Complete Profile
+                            </Link>
+                            <button
+                                onClick={() => setShowProfilePrompt(false)}
+                                className="font-mono text-[10px] text-chrome-dark uppercase tracking-widest hover:text-white transition-colors"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Sidebar */}
@@ -117,7 +165,7 @@ export default function CartSidebar() {
                             </div>
                         )}
                         <button
-                            onClick={finalizeAcquisition}
+                            onClick={handlePlaceOrder}
                             disabled={cartItems.length === 0 || loading}
                             className="flex w-full items-center justify-center gap-3 bg-electric-lime py-4 font-display font-bold uppercase tracking-[0.2em] text-black shadow-[0_0_15px_#CCFF00] transition-all hover:bg-[#bbf000] disabled:grayscale disabled:opacity-30"
                         >
