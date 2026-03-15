@@ -6,6 +6,15 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req: NextRequest) {
     console.log("[UPLOAD_DEBUG] Received upload request (Supabase Mode)");
     try {
+        // Check credentials
+        if (!process.env.DATABASE_SUPABASE_URL || !process.env.DATABASE_SUPABASE_SERVICE_ROLE_KEY) {
+            console.error("[UPLOAD_ERROR] Missing Supabase credentials in environment");
+            return NextResponse.json({ 
+                error: "Configuration Error", 
+                details: "Supabase storage credentials (URL/Service Key) are missing in environment variables." 
+            }, { status: 500 });
+        }
+
         // Auth check
         const session = await getServerSession(authOptions);
         console.log("[UPLOAD_DEBUG] Auth checked, session:", !!session);
