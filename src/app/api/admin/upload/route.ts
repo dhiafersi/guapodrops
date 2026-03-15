@@ -6,12 +6,12 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req: NextRequest) {
     console.log("[UPLOAD_DEBUG] Received upload request (Supabase Mode)");
     try {
-        // Check credentials
-        if (!process.env.DATABASE_SUPABASE_URL || !process.env.DATABASE_SUPABASE_SERVICE_ROLE_KEY) {
-            console.error("[UPLOAD_ERROR] Missing Supabase credentials in environment");
+        // Check credentials and client initialization
+        if (!supabase) {
+            console.error("[UPLOAD_ERROR] Supabase client not initialized. Check environment variables.");
             return NextResponse.json({ 
                 error: "Configuration Error", 
-                details: "Supabase storage credentials (URL/Service Key) are missing in environment variables." 
+                details: "Supabase client failed to initialize. Ensure DATABASE_SUPABASE_URL and DATABASE_SUPABASE_SERVICE_ROLE_KEY are set correctly in your environment." 
             }, { status: 500 });
         }
 
@@ -77,11 +77,12 @@ export async function POST(req: NextRequest) {
         console.log("[UPLOAD_DEBUG] Upload successful:", publicUrl);
         return NextResponse.json({ url: publicUrl });
     } catch (error: any) {
-        console.error("[UPLOAD_ERROR]", error);
+        console.error("[UPLOAD_ERROR_FATAL]", error);
         return NextResponse.json({ 
             error: "Internal Server Error", 
-            details: error.message,
-            stack: process.env.NODE_ENV === "development" ? error.stack : undefined
+            message: error.message,
+            details: error.details || error.message,
+            stack: error.stack
         }, { status: 500 });
     }
 }
