@@ -5,15 +5,21 @@ import { ShoppingCart, X, Trash2, PackageCheck, AlertTriangle, UserRound } from 
 import useSWR, { mutate } from "swr";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 
 export default function CartSidebar() {
+    const pathname = usePathname();
+    const isAuthPage = pathname?.startsWith("/auth");
+    
     const [isOpen, setIsOpen] = useState(false);
     const [showProfilePrompt, setShowProfilePrompt] = useState(false);
     const { data } = useSWR("/api/cart", fetcher);
     const { data: session } = useSession();
     const cartItems = data?.items || [];
+
+    if (isAuthPage) return null;
 
     const removeItem = async (id: string) => {
         await fetch(`/api/cart?id=${id}`, { method: "DELETE" });

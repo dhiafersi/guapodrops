@@ -13,6 +13,7 @@ interface CyberLandingProps {
 }
 
 export default function CyberLanding({ products }: CyberLandingProps) {
+    const { status } = useSession();
     const mouseX = useSpring(0, { stiffness: 50, damping: 20 });
     const mouseY = useSpring(0, { stiffness: 50, damping: 20 });
 
@@ -97,7 +98,7 @@ export default function CyberLanding({ products }: CyberLandingProps) {
                         >
                             Browse Live Drops
                         </a>
-                        <LinkButton />
+                        {status !== "authenticated" && <LinkButton />}
                     </div>
                 </div>
             </section>
