@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { query } from "@/lib/db";
 import bcrypt from "bcrypt";
+import GoogleProvider from "next-auth/providers/google";
 
 // Match the DB Schema representation for User
 interface UserRow {
@@ -59,14 +60,40 @@ export const authOptions: NextAuthOptions = {
                     role: user.role,
                 };
             }
+        }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID as string,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
         })
     ],
     session: {
         strategy: "jwt"
     },
     callbacks: {
-        async jwt({ token, user, trigger, session }) {
-            if (user) {
+        async jwt({ token, user, trigger, session, account }) {
+            // Determine if logging in via Google
+            if (account?.provider === "google" && user) {
+                // Find existing user by email
+                let dbUsers = await query<UserRow[]>('SELECT * FROM users WHERE email = ? LIMIT 1', [user.email]);
+
+                if (dbUsers.length === 0) {
+                    const id = "USER_" + Date.now().toString() + Math.random().toString(36).substring(2, 6).toUpperCase();
+                    await query(
+                        'INSERT INTO users (id, name, email, role) VALUES (?, ?, ?, ?)',
+                        [id, user.name || 'Google User', user.email, 'USER']
+                    );
+                    dbUsers = [{ id, name: user.name as string, email: user.email as string, role: 'USER' }];
+                }
+
+                const dbUser = dbUsers[0];
+                token.role = dbUser.role;
+                token.id = dbUser.id;
+                token.name = dbUser.name;
+                token.email = dbUser.email;
+                token.phone = dbUser.phone;
+                token.location = dbUser.location;
+            } else if (user) {
+                // Standard Credentials login
                 token.role = (user as any).role;
                 token.id = user.id;
                 token.name = user.name;
