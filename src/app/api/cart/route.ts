@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { sendOrderNotification } from "@/lib/resend";
 
 export const dynamic = 'force-dynamic';
 
@@ -89,6 +90,8 @@ export async function PUT() {
         const orderId = "ORD_" + Date.now().toString() + Math.random().toString(36).substring(2, 6).toUpperCase();
         const totalAmount = cartItems.reduce((acc, item) => acc + (item.fixedPrice * item.quantity), 0);
 
+        console.log(`[ORDER_DEBUG] Finalizing cart checkout. Order: ${orderId}, Total: ${totalAmount}, Items: ${cartItems.length}`);
+
         await query('INSERT INTO orders (id, "userId", "totalAmount", status) VALUES ($1, $2, $3, $4)',
             [orderId, userId, totalAmount, 'PENDING']);
 
@@ -98,7 +101,29 @@ export async function PUT() {
                 [itemId, orderId, item.productId, item.quantity, item.fixedPrice]);
         }
 
+
         await query('DELETE FROM cart_items WHERE "userId" = $1', [userId]);
+
+        // --- ASYNC EMAIL NOTIFICATION ---
+        try {
+            console.log(`[ORDER_DEBUG] Cart checkout successful for Order: ${orderId}. Sending notification...`);
+            const itemsForEmail = cartItems.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                priceAtTime: item.fixedPrice
+            }));
+
+            await sendOrderNotification({
+                orderId,
+                customerName: session.user.name || 'Anonymous',
+                customerEmail: session.user.email || 'N/A',
+                totalAmount,
+                items: itemsForEmail
+            });
+        } catch (emailError) {
+            console.error("Email notification failed:", emailError);
+            // Don't fail the order just because email failed
+        }
 
         return NextResponse.json({ success: true, message: "ACQUISITION_INITIALIZED: Admin will verify assets.", orderId });
     } catch (e) {

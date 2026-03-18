@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { sendOrderNotification } from "@/lib/resend";
 
 export async function POST(req: Request) {
     try {
@@ -38,16 +39,38 @@ export async function POST(req: Request) {
         const totalPrice = product.fixedPrice * qty;
         const id = "ORD_" + Date.now().toString() + Math.random().toString(36).substring(2, 6).toUpperCase();
 
-        // We'd typically use a transaction here, but for simplicity we rely on sequential queries.
         await query(
-            'INSERT INTO orders (id, productId, userId, quantity, totalPrice, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [id, productId, session.user.id, qty, totalPrice, 'CONFIRMED']
+            'INSERT INTO orders (id, "userId", "totalAmount", status) VALUES ($1, $2, $3, $4)',
+            [id, session.user.id, totalPrice, 'CONFIRMED']
+        );
+
+        const itemId = "ORDI_" + Math.random().toString(36).substring(2, 10).toUpperCase();
+        await query(
+            'INSERT INTO order_items (id, "orderId", "productId", quantity, "priceAtTime") VALUES ($1, $2, $3, $4, $5)',
+            [itemId, id, productId, qty, product.fixedPrice]
         );
 
         await query(
-            'UPDATE products SET stockQty = stockQty - ? WHERE id = ?',
+            'UPDATE products SET "stockQty" = "stockQty" - $1 WHERE id = $2',
             [qty, productId]
         );
+
+        // --- ASYNC EMAIL NOTIFICATION ---
+        try {
+            await sendOrderNotification({
+                orderId: id,
+                customerName: session.user.name || 'Anonymous',
+                customerEmail: session.user.email || 'N/A',
+                totalAmount: totalPrice,
+                items: [{
+                    name: product.name,
+                    quantity: qty,
+                    priceAtTime: product.fixedPrice
+                }]
+            });
+        } catch (emailError) {
+            console.error("Email notification failed:", emailError);
+        }
 
         return NextResponse.json({ success: true, orderId: id }, { status: 201 });
 
