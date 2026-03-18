@@ -106,7 +106,7 @@ export async function PUT() {
 
         // --- ASYNC EMAIL NOTIFICATION ---
         try {
-            console.log(`[ORDER_DEBUG] Cart checkout successful for Order: ${orderId}. Sending notification...`);
+            console.log(`[ORDER_DEBUG] Cart successful. Order: ${orderId}. Sending to Resend...`);
             const itemsForEmail = cartItems.map(item => ({
                 name: item.name,
                 quantity: item.quantity,
@@ -115,15 +115,16 @@ export async function PUT() {
 
             await sendOrderNotification({
                 orderId,
-                customerName: session.user.name || 'Anonymous',
-                customerEmail: session.user.email || 'N/A',
+                customerName: session.user?.name || 'Customer',
+                customerEmail: session.user?.email || 'N/A',
                 totalAmount,
                 items: itemsForEmail
             });
+            console.log(`[ORDER_DEBUG] Resend call completed for: ${orderId}`);
         } catch (emailError) {
-            console.error("Email notification failed:", emailError);
-            // Don't fail the order just because email failed
+            console.error("[ORDER_DEBUG] Notification FAILURE:", emailError);
         }
+        // Don't fail the order just because email failed
 
         return NextResponse.json({ success: true, message: "ACQUISITION_INITIALIZED: Admin will verify assets.", orderId });
     } catch (e) {
