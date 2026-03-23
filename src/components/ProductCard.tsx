@@ -48,8 +48,11 @@ export default function ProductCard({
                 }}
             />
 
+            {/* Clickable Card Overlay */}
+            <Link href={`/drops/${product.id}`} className="absolute inset-0 z-10 focus:outline-none" aria-label={`View ${product.name}`} />
+
             {/* Product Image */}
-            <div className="relative z-10 mb-4 block aspect-square w-full md:mb-6">
+            <div className="relative z-0 mb-4 block aspect-square w-full md:mb-6 pointer-events-none">
                 <motion.div
                     animate={{ y: [0, -10, 0] }}
                     transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -71,13 +74,11 @@ export default function ProductCard({
             </div>
 
             {/* Product Info */}
-            <div className="relative z-10 space-y-4">
+            <div className="relative z-0 space-y-4 pointer-events-none">
                 <div>
-                    <Link href={`/drops/${product.id}`} className="after:absolute after:inset-0 after:z-10 focus:outline-none block">
-                        <h3 className="mb-1 line-clamp-2 text-lg font-display font-bold uppercase tracking-[0.08em] text-white md:text-xl md:tracking-wider">
-                            {product.name}
-                        </h3>
-                    </Link>
+                    <h3 className="mb-1 line-clamp-2 text-lg font-display font-bold uppercase tracking-[0.08em] text-white md:text-xl md:tracking-wider">
+                        {product.name}
+                    </h3>
                     <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-chrome-dark md:text-xs md:tracking-widest">
                         {isBidding ? (
                             <>
@@ -93,7 +94,7 @@ export default function ProductCard({
                     </div>
                 </div>
 
-                <div className="flex items-end justify-between gap-3 border-t border-white/10 pt-4 relative z-20">
+                <div className="flex items-end justify-between gap-3 border-t border-white/10 pt-4 relative z-20 pointer-events-auto">
                     <div className="min-w-0">
                         <span className="mb-0.5 block font-mono text-[9px] uppercase tracking-[0.2em] text-chrome-dark md:text-[10px]">
                             {isBidding ? "Current Bid" : "Price"}
@@ -103,7 +104,7 @@ export default function ProductCard({
                         </span>
                     </div>
                     <Link href={`/drops/${product.id}`} className="shrink-0 pointer-events-auto">
-                        <MagneticButton className={`px-5 py-2 rounded-full font-display font-bold text-[10px] uppercase transition-all duration-300 ${isBidding
+                        <MagneticButton className={`cursor-pointer px-5 py-2 rounded-full font-display font-bold text-[10px] uppercase transition-all duration-300 ${isBidding
                             ? "bg-bio-violet text-white shadow-[0_0_15px_rgba(157,0,255,0.5)]"
                             : "bg-neon-teal text-black shadow-[0_0_15px_rgba(0,242,255,0.5)]"
                             } hover:brightness-110 md:px-5 md:py-2 px-4 py-2.5`}>
