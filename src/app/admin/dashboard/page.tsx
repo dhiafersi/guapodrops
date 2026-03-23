@@ -443,7 +443,9 @@ export default function AdminDashboardPage() {
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <Phone className="w-4 h-4 text-blue-400" />
-                                                <span className="text-xs font-mono text-white">Comms: {order.userPhone}</span>
+                                                <span className="text-xs font-mono text-white">
+                                                    Comms: <a href={`tel:${order.userPhone}`} className="text-blue-400 hover:text-blue-300 transition-colors underline decoration-blue-400/30 underline-offset-4">{order.userPhone}</a>
+                                                </span>
                                             </div>
                                             <div className="flex items-center gap-3">
                                                 <MapPin className="w-4 h-4 text-electric-lime" />

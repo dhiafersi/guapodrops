@@ -138,9 +138,11 @@ export default function CyberLanding({ products }: CyberLandingProps) {
                 <KineticText as="h2" className="mb-6 text-3xl font-black md:mb-8 md:text-6xl">
                     Ready for the <br /> Next Phase?
                 </KineticText>
-                <MagneticButton className="px-12 py-4 rounded-none bg-white text-black font-display font-black text-lg uppercase shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)] transition-all">
-                    Join the Network
-                </MagneticButton>
+                <a href="https://www.instagram.com/guapodrops" target="_blank" rel="noopener noreferrer">
+                    <MagneticButton className="px-12 py-4 rounded-none bg-white text-black font-display font-black text-lg uppercase shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:shadow-[0_0_30px_rgba(0,242,255,0.5)] transition-all">
+                        Join the Network
+                    </MagneticButton>
+                </a>
             </section>
         </main>
     );
