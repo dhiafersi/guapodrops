@@ -45,7 +45,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json();
-        const { name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty, featuredRank, isSurCommande, isFeatured } = body;
+        const { name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty, isSurCommande } = body;
 
         if (!name || !mode) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -64,8 +64,8 @@ export async function POST(req: Request) {
         const imagesJson = JSON.stringify(extraImages);
 
         await query(
-            `INSERT INTO products (id, name, "imageUrl", images, description, mode, "startPrice", "endTime", "minIncrement", "fixedPrice", "stockQty", "featuredRank", "isSurCommande", "isFeatured")
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+            `INSERT INTO products (id, name, "imageUrl", images, description, mode, "startPrice", "endTime", "minIncrement", "fixedPrice", "stockQty", "isSurCommande")
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
                 id, name, imageUrl || null, imagesJson, description || null, mode,
                 mode === "BIDDING" ? (startPrice || 0) : null,
@@ -73,9 +73,7 @@ export async function POST(req: Request) {
                 mode === "BIDDING" ? (minIncrement || 1) : null,
                 mode === "STOCK" ? (fixedPrice || 0) : null,
                 mode === "STOCK" ? (stockQty || 0) : null,
-                featuredRank ? parseInt(featuredRank, 10) : null,
-                !!isSurCommande,
-                !!isFeatured
+                !!isSurCommande
             ]
         );
 
@@ -95,7 +93,7 @@ export async function PUT(req: Request) {
         }
 
         const body = await req.json();
-        const { id, name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty, featuredRank, isSurCommande, isFeatured } = body;
+        const { id, name, imageUrl, secondaryImages, description, mode, startPrice, endHours, minIncrement, fixedPrice, stockQty, isSurCommande } = body;
 
         if (!id || !name || !mode) {
             return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -112,7 +110,7 @@ export async function PUT(req: Request) {
         const imagesJson = JSON.stringify(extraImages);
 
         await query(
-            `UPDATE products SET name=$1, "imageUrl"=$2, images=$3, description=$4, mode=$5, "startPrice"=$6, "endTime"=$7, "minIncrement"=$8, "fixedPrice"=$9, "stockQty"=$10, "featuredRank"=$11, "isSurCommande"=$12, "isFeatured"=$13 WHERE id=$14`,
+            `UPDATE products SET name=$1, "imageUrl"=$2, images=$3, description=$4, mode=$5, "startPrice"=$6, "endTime"=$7, "minIncrement"=$8, "fixedPrice"=$9, "stockQty"=$10, "isSurCommande"=$11 WHERE id=$12`,
             [
                 name, imageUrl || null, imagesJson, description || null, mode,
                 mode === "BIDDING" ? (startPrice || 0) : null,
@@ -120,9 +118,7 @@ export async function PUT(req: Request) {
                 mode === "BIDDING" ? (minIncrement || 1) : null,
                 mode === "STOCK" ? (fixedPrice || 0) : null,
                 mode === "STOCK" ? (stockQty || 0) : null,
-                featuredRank ? parseInt(featuredRank, 10) : null,
                 !!isSurCommande,
-                !!isFeatured,
                 id
             ]
         );

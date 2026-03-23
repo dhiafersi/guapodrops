@@ -14,9 +14,12 @@ export default function CartSidebar() {
     const isAuthPage = pathname?.startsWith("/auth");
     
     const [isOpen, setIsOpen] = useState(false);
-    const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+    const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
+    const [checkoutPhone, setCheckoutPhone] = useState("");
+    const [checkoutLocation, setCheckoutLocation] = useState("");
+    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
     const { data } = useSWR("/api/cart", fetcher);
-    const { data: session } = useSession();
+    const { data: session, update } = useSession();
     const cartItems = data?.items || [];
 
 
@@ -31,11 +34,40 @@ export default function CartSidebar() {
 
     const handlePlaceOrder = () => {
         const user = session?.user as any;
-        const missingInfo = !user?.phone || !user?.location || !user?.email;
-        if (missingInfo) {
-            setShowProfilePrompt(true);
+        setCheckoutPhone(user?.phone || "");
+        setCheckoutLocation(user?.location || "");
+        setShowConfirmPrompt(true);
+    };
+
+    const confirmAndPlaceOrder = async () => {
+        const user = session?.user as any;
+        if (!checkoutPhone || !checkoutLocation) {
+            setMessage("Phone and location are required.");
             return;
         }
+
+        // Only update profile if something changed or it was empty
+        if (checkoutPhone !== user?.phone || checkoutLocation !== user?.location) {
+            setIsUpdatingProfile(true);
+            try {
+                await fetch("/api/user/profile", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        name: user.name,
+                        email: user.email,
+                        phone: checkoutPhone,
+                        location: checkoutLocation
+                    }),
+                });
+                await update({ ...session, user: { ...user, phone: checkoutPhone, location: checkoutLocation } });
+            } catch (err: any) {
+                console.error("Failed to update profile", err);
+            } finally {
+                setIsUpdatingProfile(false);
+            }
+        }
+        
         finalizeAcquisition();
     };
 
@@ -86,32 +118,54 @@ export default function CartSidebar() {
                 />
             )}
 
-            {/* Profile Incomplete Modal */}
-            {showProfilePrompt && (
+            {/* Order Confirmation Modal */}
+            {showConfirmPrompt && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setShowProfilePrompt(false)} />
-                    <div className="relative liquid-glass w-full max-w-sm p-8 rounded-[2rem] border border-white/10 space-y-6 text-center">
-                        <div className="w-14 h-14 bg-bio-violet/10 border border-bio-violet/30 rounded-2xl flex items-center justify-center mx-auto">
-                            <AlertTriangle className="w-7 h-7 text-bio-violet" />
+                    <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setShowConfirmPrompt(false)} />
+                    <div className="relative liquid-glass w-full max-w-sm p-6 md:p-8 rounded-[2rem] border border-electric-lime/40 space-y-6 max-h-[90vh] overflow-y-auto">
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-electric-lime/10 border border-electric-lime/30 rounded-2xl flex items-center justify-center mx-auto">
+                            <PackageCheck className="w-6 h-6 md:w-7 md:h-7 text-electric-lime" />
                         </div>
-                        <div>
-                            <h3 className="font-black text-xl uppercase tracking-tight text-white mb-2">Profile Incomplete</h3>
-                            <p className="font-mono text-[11px] text-chrome-dark uppercase tracking-wider leading-relaxed">
-                                You need to add your <span className="text-white">phone number</span> and <span className="text-white">location</span> before placing an order.
+                        <div className="text-center">
+                            <h3 className="font-display font-bold text-lg md:text-xl uppercase tracking-tight text-white mb-2">Confirm Your Details</h3>
+                            <p className="font-mono text-[10px] md:text-[11px] text-chrome-dark uppercase tracking-wider leading-relaxed">
+                                Verify your shipping information below. You can update it here if needed before placing the order.
                             </p>
                         </div>
-                        <div className="flex flex-col gap-3">
-                            <Link
-                                href="/dashboard"
-                                onClick={() => { setShowProfilePrompt(false); setIsOpen(false); }}
-                                className="flex items-center justify-center gap-2 w-full py-3 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-xl"
-                            >
-                                <UserRound className="w-4 h-4" />
-                                Complete Profile
-                            </Link>
+                        
+                        <div className="space-y-4 text-left">
+                            <div className="space-y-1.5">
+                                <label className="font-mono text-[9px] uppercase tracking-widest text-chrome-dark ml-1">Phone Number</label>
+                                <input
+                                    value={checkoutPhone}
+                                    onChange={(e) => setCheckoutPhone(e.target.value)}
+                                    placeholder="Your phone number"
+                                    className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none transition-colors rounded-xl text-sm"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <label className="font-mono text-[9px] uppercase tracking-widest text-chrome-dark ml-1">Location</label>
+                                <input
+                                    value={checkoutLocation}
+                                    onChange={(e) => setCheckoutLocation(e.target.value)}
+                                    placeholder="Your full address/location"
+                                    className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-3 focus:border-electric-lime outline-none transition-colors rounded-xl text-sm"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-3 mt-4">
                             <button
-                                onClick={() => setShowProfilePrompt(false)}
-                                className="font-mono text-[10px] text-chrome-dark uppercase tracking-widest hover:text-white transition-colors"
+                                onClick={confirmAndPlaceOrder}
+                                disabled={loading || isUpdatingProfile || !checkoutPhone || !checkoutLocation}
+                                className="flex items-center justify-center gap-2 w-full py-3 md:py-4 bg-electric-lime text-black font-black text-[10px] md:text-xs uppercase tracking-[0.2em] rounded-xl hover:bg-[#bbf000] disabled:opacity-50 transition-colors"
+                            >
+                                {(loading || isUpdatingProfile) ? "Processing..." : "Confirm & Place Order"}
+                            </button>
+                            <button
+                                onClick={() => setShowConfirmPrompt(false)}
+                                disabled={loading || isUpdatingProfile}
+                                className="font-mono text-[9px] md:text-[10px] text-chrome-dark uppercase tracking-widest hover:text-white transition-colors py-2"
                             >
                                 Cancel
                             </button>

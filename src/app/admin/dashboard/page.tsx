@@ -13,22 +13,23 @@ export default function AdminDashboardPage() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
-    const [activeTab, setActiveTab] = useState<"PRODUCTS" | "ORDERS" | "SORTING">("PRODUCTS");
+    const [activeTab, setActiveTab] = useState<"PRODUCTS" | "ORDERS" | "SORTING" | "USERS">("PRODUCTS");
     const [stats, setStats] = useState({ bids: 0, products: 0 });
     const [products, setProducts] = useState<any[]>([]);
     const [orders, setOrders] = useState<any[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
 
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState<string | null>(null);
+    const [showProductModal, setShowProductModal] = useState(false);
 
     const [formData, setFormData] = useState({
         name: "",
         imageUrl: "",
         description: "",
         secondaryImages: "",
-        featuredRank: "",
         mode: "BIDDING" as "BIDDING" | "STOCK",
         startPrice: "",
         endHours: "24",
@@ -36,7 +37,6 @@ export default function AdminDashboardPage() {
         fixedPrice: "",
         stockQty: "",
         isSurCommande: false,
-        isFeatured: false,
     });
 
     // Basic authorization redirect & dummy initial fetch
@@ -47,6 +47,7 @@ export default function AdminDashboardPage() {
             fetchProducts();
             fetchStats();
             fetchOrders();
+            fetchUsers();
         }
     }, [session, status, router]);
 
@@ -70,6 +71,16 @@ export default function AdminDashboardPage() {
         } catch (e) { }
     };
 
+    const fetchUsers = async () => {
+        try {
+            const res = await fetch("/api/admin/users");
+            if (res.ok) {
+                const data = await res.json();
+                setUsers(data.users || []);
+            }
+        } catch (e) { }
+    };
+
     const fetchStats = async () => {
         try {
             const res = await fetch("/api/admin/stats");
@@ -89,6 +100,17 @@ export default function AdminDashboardPage() {
             });
             if (res.ok) fetchOrders();
         } catch (e) { }
+    };
+
+    const deleteOrder = async (id: string) => {
+        if (!confirm("Are you sure you want to permanently delete this order?")) return;
+        try {
+            const res = await fetch(`/api/admin/orders?id=${id}`, { method: 'DELETE' });
+            if (res.ok) fetchOrders();
+            else alert("Failed to delete order.");
+        } catch (e) {
+            alert("Error deleting order.");
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -116,7 +138,6 @@ export default function AdminDashboardPage() {
             imageUrl: product.imageUrl || "",
             description: product.description || "",
             secondaryImages: secondaryImagesText,
-            featuredRank: product.featuredRank?.toString() || "",
             mode: product.mode,
             startPrice: product.startPrice?.toString() || "",
             endHours: "24", // Note: Resetting duration for edits for simplicity
@@ -124,19 +145,19 @@ export default function AdminDashboardPage() {
             fixedPrice: product.fixedPrice?.toString() || "",
             stockQty: product.stockQty?.toString() || "",
             isSurCommande: !!product.isSurCommande,
-            isFeatured: !!product.isFeatured,
         });
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setShowProductModal(true);
     };
 
     const cancelEdit = () => {
         setIsEditing(false);
         setEditId(null);
         setFormData({
-            name: "", imageUrl: "", description: "", secondaryImages: "", featuredRank: "",
+            name: "", imageUrl: "", description: "", secondaryImages: "",
             mode: "BIDDING", startPrice: "", endHours: "24", minIncrement: "5", fixedPrice: "", stockQty: "",
-            isSurCommande: false, isFeatured: false
+            isSurCommande: false
         });
+        setShowProductModal(false);
     };
 
     const handleReorderSave = async () => {
@@ -188,8 +209,10 @@ export default function AdminDashboardPage() {
             }
 
             setFormData({
-                ...formData, name: "", imageUrl: "", secondaryImages: "", description: "", featuredRank: "", startPrice: "", fixedPrice: "", stockQty: "", isSurCommande: false, isFeatured: false
+                ...formData, name: "", imageUrl: "", secondaryImages: "", description: "", startPrice: "", fixedPrice: "", stockQty: "", isSurCommande: false
             });
+
+            setShowProductModal(false);
 
             fetchProducts();
             fetchStats();
@@ -225,14 +248,14 @@ export default function AdminDashboardPage() {
 
     return (
         <div className="min-h-screen p-8 max-w-7xl mx-auto space-y-8">
-            <header className="flex justify-between items-center border-b border-cyber-purple/30 pb-4">
+            <header className="flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 border-b border-cyber-purple/30 pb-4">
                 <div>
                     <h1 className="text-3xl font-display font-bold uppercase text-white shadow-cyber-purple drop-shadow-md">
                         COMMAND_CENTER <span className="text-cyber-purple text-glow-purple">:: DASHBOARD</span>
                     </h1>
                     <p className="text-chrome-dark font-mono text-sm uppercase mt-1">Logged in as: {session.user.name}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                     <button
                         onClick={() => setActiveTab("PRODUCTS")}
                         className={`px-4 py-2 font-display text-xs tracking-widest border transition-all ${activeTab === 'PRODUCTS' ? 'bg-electric-lime text-black border-electric-lime shadow-[0_0_10px_#CCFF00]' : 'text-chrome-dark border-chrome-dark/30 hover:border-chrome-light'}`}
@@ -250,6 +273,12 @@ export default function AdminDashboardPage() {
                         className={`px-4 py-2 font-display text-xs tracking-widest border transition-all ${activeTab === 'SORTING' ? 'bg-white text-black border-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-chrome-dark border-chrome-dark/30 hover:border-chrome-light'}`}
                     >
                         SORTING
+                    </button>
+                    <button
+                        onClick={() => setActiveTab("USERS")}
+                        className={`px-4 py-2 font-display text-xs tracking-widest border transition-all ${activeTab === 'USERS' ? 'bg-blue-500 text-white border-blue-500 shadow-[0_0_10px_#3b82f6]' : 'text-chrome-dark border-chrome-dark/30 hover:border-chrome-light'}`}
+                    >
+                        CLIENTS
                     </button>
                 </div>
             </header>
@@ -270,152 +299,37 @@ export default function AdminDashboardPage() {
             </div>
 
             {activeTab === "PRODUCTS" ? (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* ADD / EDIT PRODUCT FORM */}
-                    <div className="lg:col-span-1 glass-panel p-6 border border-chrome-dark/30 h-fit">
-                        <h2 className={`text-xl font-display font-bold ${isEditing ? 'text-cyber-purple' : 'text-electric-lime'} uppercase mb-6 flex items-center gap-2`}>
-                            <span className={`w-2 h-2 ${isEditing ? 'bg-cyber-purple' : 'bg-electric-lime'} inline-block animate-pulse`}></span>
-                            {isEditing ? "Modify Product" : "Initialize Drop"}
-                        </h2>
-
-                        {message && (
-                            <div className={`p-3 mb-4 text-xs font-mono border ${message.startsWith("ERROR") ? "border-red-500 text-red-500" : "border-electric-lime text-electric-lime"} bg-black/50`}>
-                                {message}
-                            </div>
-                        )}
-
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div>
-                                <label className="block text-chrome-light font-mono text-xs uppercase mb-1">Product Name</label>
-                                <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-2 focus:border-electric-lime outline-none" placeholder="Ex: Cyber Deck V1" />
-                            </div>
-
-                            <ImageUploader
-                                label="Primary Image"
-                                currentUrl={formData.imageUrl}
-                                onUploaded={(url) => setFormData({ ...formData, imageUrl: url })}
-                            />
-
-                            <MultiImageUploader
-                                label="Extra Images (Gallery)"
-                                currentUrls={formData.secondaryImages}
-                                onChanged={(urls) => setFormData({ ...formData, secondaryImages: urls })}
-                            />
-
-                            <div>
-                                <label className="block text-chrome-light font-mono text-xs uppercase mb-1">Description</label>
-                                <textarea name="description" value={formData.description} onChange={handleChange} className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-2 focus:border-electric-lime outline-none min-h-[100px]" placeholder="Detailed product specifications..." />
-                            </div>
-
-                            <div>
-                                <label className="block text-chrome-light font-mono text-xs uppercase mb-1">Homepage Priority</label>
-                                <input type="number" name="featuredRank" value={formData.featuredRank} onChange={handleChange} className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-2 focus:border-electric-lime outline-none" min="1" placeholder="1 shows first on the main page" />
-                                <p className="mt-1 text-[10px] font-mono text-chrome-dark">Leave empty to keep normal newest-first ordering. Lower numbers appear first.</p>
-                            </div>
-
-                            <div className="pt-4 border-t border-chrome-dark/30">
-                                <label className="block text-chrome-light font-mono text-xs uppercase mb-2">Engage Mode</label>
-                                <div className="flex gap-4">
-                                    <label className="flex items-center gap-2 cursor-pointer font-mono text-sm text-cyber-purple">
-                                        <input type="radio" name="mode" checked={formData.mode === "BIDDING"} onChange={() => handleModeChange("BIDDING")} className="accent-cyber-purple" /> Bidding
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer font-mono text-sm text-electric-lime">
-                                        <input type="radio" name="mode" checked={formData.mode === "STOCK"} onChange={() => handleModeChange("STOCK")} className="accent-electric-lime" /> Direct Stock
-                                    </label>
-                                </div>
-                            </div>
-
-                            {formData.mode === "BIDDING" ? (
-                                <div className="space-y-4 pt-4 border-t border-chrome-dark/30">
-                                    <div>
-                                        <label className="block text-cyber-purple font-mono text-xs uppercase mb-1">Start Price (TND)</label>
-                                        <input required type="number" name="startPrice" value={formData.startPrice} onChange={handleChange} className="w-full bg-black/50 border border-cyber-purple/50 text-white font-mono p-2 focus:border-cyber-purple outline-none" />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label className="block text-cyber-purple font-mono text-xs uppercase mb-1">Duration (Hours)</label>
-                                            <input required type="number" name="endHours" value={formData.endHours} onChange={handleChange} className="w-full bg-black/50 border border-cyber-purple/50 text-white font-mono p-2 focus:border-cyber-purple outline-none" min="1" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-cyber-purple font-mono text-xs uppercase mb-1">Min Increment</label>
-                                            <input required type="number" name="minIncrement" value={formData.minIncrement} onChange={handleChange} className="w-full bg-black/50 border border-cyber-purple/50 text-white font-mono p-2 focus:border-cyber-purple outline-none" min="1" />
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="space-y-4 pt-4 border-t border-chrome-dark/30">
-                                    <div>
-                                        <label className="block text-electric-lime font-mono text-xs uppercase mb-1">Fixed Price (TND)</label>
-                                        <input required type="number" name="fixedPrice" value={formData.fixedPrice} onChange={handleChange} className="w-full bg-black/50 border border-electric-lime/50 text-white font-mono p-2 focus:border-electric-lime outline-none" />
-                                    </div>
-                                    {!formData.isSurCommande && (
-                                        <div>
-                                            <label className="block text-electric-lime font-mono text-xs uppercase mb-1">Stock Quantity</label>
-                                            <input required type="number" name="stockQty" value={formData.stockQty} onChange={handleChange} className="w-full bg-black/50 border border-electric-lime/50 text-white font-mono p-2 focus:border-electric-lime outline-none" min="1" />
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="pt-4 border-t border-chrome-dark/30">
-                                <label className="flex items-center gap-3 cursor-pointer group mb-4">
-                                    <div className="relative">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isFeatured}
-                                            onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })}
-                                            className="sr-only"
-                                        />
-                                        <div className={`w-10 h-5 rounded-full transition-colors ${formData.isFeatured ? 'bg-cyber-purple' : 'bg-zinc-800 border border-chrome-dark/30'}`}></div>
-                                        <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isFeatured ? 'translate-x-5' : ''}`}></div>
-                                    </div>
-                                    <span className={`font-mono text-xs uppercase tracking-widest ${formData.isFeatured ? 'text-cyber-purple' : 'text-chrome-dark'}`}>
-                                        Show First on Main Page (Featured)
-                                    </span>
-                                </label>
-
-                                <label className="flex items-center gap-3 cursor-pointer group">
-                                    <div className="relative">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.isSurCommande}
-                                            onChange={(e) => setFormData({ ...formData, isSurCommande: e.target.checked })}
-                                            className="sr-only"
-                                        />
-                                        <div className={`w-10 h-5 rounded-full transition-colors ${formData.isSurCommande ? 'bg-electric-lime' : 'bg-zinc-800 border border-chrome-dark/30'}`}></div>
-                                        <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isSurCommande ? 'translate-x-5' : ''}`}></div>
-                                    </div>
-                                    <span className={`font-mono text-xs uppercase tracking-widest ${formData.isSurCommande ? 'text-electric-lime' : 'text-chrome-dark'}`}>
-                                        On Order
-                                    </span>
-                                </label>
-                                <p className="mt-2 text-[10px] font-mono text-chrome-dark leading-tight">
-                                    Enable this for items that are not in stock but can be requested. This will display a "ON ORDER" badge to customers.
-                                </p>
-                            </div>
-
-                            <div className="flex gap-2">
-                                {isEditing && (
-                                    <button type="button" onClick={cancelEdit} className="flex-1 bg-zinc-800 text-white py-3 text-xs font-display tracking-widest border border-zinc-700">
-                                        CANCEL
-                                    </button>
-                                )}
-                                <button type="submit" disabled={loading} className={`flex-[2] btn-glitch py-3 text-sm tracking-widest disabled:opacity-50 ${isEditing ? 'bg-cyber-purple' : ''}`}>
-                                    {loading ? "PROCESSING..." : (isEditing ? "UPDATE PRODUCT" : "DEPLOY PRODUCT")}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    {message && (
+                        <div className={`p-3 text-xs font-mono border ${message.startsWith("ERROR") ? "border-red-500 text-red-500" : "border-electric-lime text-electric-lime"} bg-black/50`}>
+                            {message}
+                        </div>
+                    )}
+                    
                     {/* RECENT ACTIVITY / PRODUCTS */}
-                    <div className="lg:col-span-2 glass-panel p-6 border border-chrome-dark/30 h-fit">
-                        <div className="flex justify-between items-center mb-6 border-b border-chrome-dark/30 pb-2">
-                            <h2 className="text-xl font-display font-bold text-white uppercase">
-                                Active Roster
-                            </h2>
-                            {!isEditing && (
-                                <div className="text-[10px] font-mono text-electric-lime animate-pulse">SYSTEM_ONLINE // TOTAL: {products.length}</div>
-                            )}
+                    <div className="glass-panel p-6 border border-chrome-dark/30 h-fit">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 border-b border-chrome-dark/30 pb-4">
+                            <div>
+                                <h2 className="text-xl font-display font-bold text-white uppercase">
+                                    Active Roster
+                                </h2>
+                                <div className="text-[10px] font-mono text-electric-lime animate-pulse mt-1">SYSTEM_ONLINE // TOTAL: {products.length}</div>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setEditId(null);
+                                    setFormData({
+                                        name: "", imageUrl: "", description: "", secondaryImages: "",
+                                        mode: "BIDDING", startPrice: "", endHours: "24", minIncrement: "5", fixedPrice: "", stockQty: "",
+                                        isSurCommande: false
+                                    });
+                                    setShowProductModal(true);
+                                }}
+                                className="bg-electric-lime text-black px-4 py-3 sm:py-2 font-display text-xs font-bold tracking-widest hover:bg-[#bbf000] transition-colors flex items-center justify-center gap-2 w-full sm:w-auto"
+                            >
+                                <Plus className="w-4 h-4" /> INITIALIZE DROP
+                            </button>
                         </div>
 
                         {products.length === 0 ? (
@@ -443,20 +357,10 @@ export default function AdminDashboardPage() {
                                                     ON ORDER
                                                 </div>
                                             )}
-                                            {p.isFeatured && (
-                                                <div className="text-[10px] font-display font-bold px-2 py-0.5 uppercase bg-cyber-purple text-white shadow-[0_0_10px_#bc13fe]">
-                                                    FEATURED
-                                                </div>
-                                            )}
                                             <h3 className="font-bold text-white uppercase text-sm truncate pr-12">{p.name}</h3>
 
                                         </div>
                                         <div className="font-mono text-xs text-chrome-dark space-y-1">
-                                            {p.featuredRank ? (
-                                                <p>Priority: <span className="text-electric-lime">#{p.featuredRank}</span></p>
-                                            ) : (
-                                                <p>Priority: Standard feed</p>
-                                            )}
                                             {p.mode === 'BIDDING' ? (
                                                 <>
                                                     <p>Start: <span className="text-electric-lime">{p.startPrice} TND</span></p>
@@ -516,6 +420,13 @@ export default function AdminDashboardPage() {
                                                 <option value="CANCELLED">CANCELLED</option>
                                             </select>
                                         </div>
+                                        <button 
+                                            onClick={() => deleteOrder(order.id)}
+                                            className="text-chrome-dark hover:text-red-500 transition-colors self-end ml-4"
+                                            title="Delete Order"
+                                        >
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
                                 </div>
 
@@ -569,6 +480,43 @@ export default function AdminDashboardPage() {
                         ))
                     )}
                 </div>
+            ) : activeTab === "USERS" ? (
+                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <h2 className="text-xl font-display font-bold text-white uppercase mb-4">Client Registry</h2>
+                    {users.length === 0 ? (
+                        <div className="glass-panel py-20 text-center opacity-30">
+                            <p className="font-mono text-xs uppercase tracking-widest">No clients identified in system registry.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 gap-4">
+                            {users.map((user) => (
+                                <div key={user.id} className="glass-panel border-chrome-dark/30 overflow-hidden bg-black/60 p-4 md:p-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start md:items-center justify-between">
+                                    <div className="flex-1 w-full md:min-w-[200px] space-y-1 md:space-y-2">
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="text-white font-bold font-display uppercase tracking-wider text-sm md:text-base">{user.name}</h3>
+                                            {user.role === 'ADMIN' && <span className="text-[9px] bg-red-500/20 text-red-500 px-2 py-0.5 border border-red-500/50 uppercase font-bold">Admin</span>}
+                                        </div>
+                                        <p className="text-[10px] md:text-xs text-chrome-dark font-mono break-all">{user.email}</p>
+                                    </div>
+                                    <div className="flex-1 w-full md:min-w-[200px] space-y-1 md:space-y-2 md:border-l md:border-white/5 md:pl-6">
+                                        <div className="flex items-center gap-2 text-[10px] md:text-xs font-mono text-white">
+                                            <Phone className="w-3 h-3 md:w-4 md:h-4 text-blue-400" />
+                                            {user.phone || 'N/A'}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-[10px] md:text-xs font-mono text-white">
+                                            <MapPin className="w-3 h-3 md:w-4 md:h-4 text-electric-lime" />
+                                            {user.location || 'N/A'}
+                                        </div>
+                                    </div>
+                                    <div className="text-left md:text-right flex-1 w-full md:min-w-[150px] md:border-l md:border-white/5 md:pl-6 pt-2 md:pt-0 border-t border-white/5 md:border-t-0">
+                                        <p className="text-[9px] md:text-[10px] text-chrome-dark uppercase font-mono">Registered</p>
+                                        <p className="text-[10px] md:text-xs text-white font-mono">{new Date(user.createdAt).toLocaleDateString()}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
             ) : (
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto">
                     <div className="flex justify-between items-center mb-4">
@@ -608,7 +556,7 @@ export default function AdminDashboardPage() {
                                 <div className="flex-grow min-w-0">
                                     <h4 className="text-sm font-bold text-white uppercase truncate">{product.name}</h4>
                                     <p className="text-[10px] font-mono text-chrome-dark uppercase tracking-tighter">
-                                        Current Rank: <span className="text-electric-lime">#{product.featuredRank || 'Unset'}</span> • {product.mode}
+                                        {product.mode}
                                     </p>
                                 </div>
                                 <div className="text-right flex-shrink-0">
@@ -626,6 +574,122 @@ export default function AdminDashboardPage() {
                             <p className="font-mono text-xs uppercase tracking-widest">Registry is empty.</p>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* PRODUCT ADD/EDIT MODAL OVERLAY */}
+            {showProductModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 bg-black/80 backdrop-blur-sm overflow-y-auto">
+                    <div className="glass-panel border-chrome-dark/50 max-w-2xl w-full my-auto shadow-[0_0_30px_rgba(0,0,0,0.8)] relative animate-in zoom-in-95 duration-200">
+                        <div className="p-6 md:p-8 relative">
+                            <button onClick={cancelEdit} className="absolute top-4 right-4 text-chrome-dark hover:text-white transition-colors bg-black rounded-full shadow-md z-10">
+                                <XCircle className="w-8 h-8 md:w-6 md:h-6" />
+                            </button>
+
+                            <h2 className={`text-xl font-display font-bold ${isEditing ? 'text-cyber-purple' : 'text-electric-lime'} uppercase mb-6 flex items-center gap-2`}>
+                                <span className={`w-2 h-2 ${isEditing ? 'bg-cyber-purple' : 'bg-electric-lime'} inline-block animate-pulse`}></span>
+                                {isEditing ? "Modify Product" : "Initialize Drop"}
+                            </h2>
+
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-chrome-light font-mono text-xs uppercase mb-1">Product Name</label>
+                                    <input required type="text" name="name" value={formData.name} onChange={handleChange} className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-2 focus:border-electric-lime outline-none" placeholder="Ex: Cyber Deck V1" />
+                                </div>
+
+                                <ImageUploader
+                                    label="Primary Image"
+                                    currentUrl={formData.imageUrl}
+                                    onUploaded={(url) => setFormData({ ...formData, imageUrl: url })}
+                                />
+
+                                <MultiImageUploader
+                                    label="Extra Images (Gallery)"
+                                    currentUrls={formData.secondaryImages}
+                                    onChanged={(urls) => setFormData({ ...formData, secondaryImages: urls })}
+                                />
+
+                                <div>
+                                    <label className="block text-chrome-light font-mono text-xs uppercase mb-1">Description</label>
+                                    <textarea name="description" value={formData.description} onChange={handleChange} className="w-full bg-black/50 border border-chrome-dark/50 text-white font-mono p-2 focus:border-electric-lime outline-none min-h-[100px]" placeholder="Detailed product specifications..." />
+                                </div>
+
+                                <div className="pt-4 border-t border-chrome-dark/30">
+                                    <label className="block text-chrome-light font-mono text-xs uppercase mb-2">Engage Mode</label>
+                                    <div className="flex gap-4">
+                                        <label className="flex items-center gap-2 cursor-pointer font-mono text-sm text-cyber-purple">
+                                            <input type="radio" name="mode" checked={formData.mode === "BIDDING"} onChange={() => handleModeChange("BIDDING")} className="accent-cyber-purple" /> Bidding
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer font-mono text-sm text-electric-lime">
+                                            <input type="radio" name="mode" checked={formData.mode === "STOCK"} onChange={() => handleModeChange("STOCK")} className="accent-electric-lime" /> Direct Stock
+                                        </label>
+                                    </div>
+                                </div>
+
+                                {formData.mode === "BIDDING" ? (
+                                    <div className="space-y-4 pt-4 border-t border-chrome-dark/30">
+                                        <div>
+                                            <label className="block text-cyber-purple font-mono text-xs uppercase mb-1">Start Price (TND)</label>
+                                            <input required type="number" name="startPrice" value={formData.startPrice} onChange={handleChange} className="w-full bg-black/50 border border-cyber-purple/50 text-white font-mono p-2 focus:border-cyber-purple outline-none" />
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div>
+                                                <label className="block text-cyber-purple font-mono text-xs uppercase mb-1">Duration (Hours)</label>
+                                                <input required type="number" name="endHours" value={formData.endHours} onChange={handleChange} className="w-full bg-black/50 border border-cyber-purple/50 text-white font-mono p-2 focus:border-cyber-purple outline-none" min="1" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-cyber-purple font-mono text-xs uppercase mb-1">Min Increment</label>
+                                                <input required type="number" name="minIncrement" value={formData.minIncrement} onChange={handleChange} className="w-full bg-black/50 border border-cyber-purple/50 text-white font-mono p-2 focus:border-cyber-purple outline-none" min="1" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4 pt-4 border-t border-chrome-dark/30">
+                                        <div>
+                                            <label className="block text-electric-lime font-mono text-xs uppercase mb-1">Fixed Price (TND)</label>
+                                            <input required type="number" name="fixedPrice" value={formData.fixedPrice} onChange={handleChange} className="w-full bg-black/50 border border-electric-lime/50 text-white font-mono p-2 focus:border-electric-lime outline-none" />
+                                        </div>
+                                        {!formData.isSurCommande && (
+                                            <div>
+                                                <label className="block text-electric-lime font-mono text-xs uppercase mb-1">Stock Quantity</label>
+                                                <input required type="number" name="stockQty" value={formData.stockQty} onChange={handleChange} className="w-full bg-black/50 border border-electric-lime/50 text-white font-mono p-2 focus:border-electric-lime outline-none" min="1" />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="pt-4 border-t border-chrome-dark/30">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className="relative">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.isSurCommande}
+                                                onChange={(e) => setFormData({ ...formData, isSurCommande: e.target.checked })}
+                                                className="sr-only"
+                                            />
+                                            <div className={`w-10 h-5 rounded-full transition-colors ${formData.isSurCommande ? 'bg-electric-lime' : 'bg-zinc-800 border border-chrome-dark/30'}`}></div>
+                                            <div className={`absolute top-1 left-1 w-3 h-3 rounded-full bg-white transition-transform ${formData.isSurCommande ? 'translate-x-5' : ''}`}></div>
+                                        </div>
+                                        <span className={`font-mono text-xs uppercase tracking-widest ${formData.isSurCommande ? 'text-electric-lime' : 'text-chrome-dark'}`}>
+                                            On Order
+                                        </span>
+                                    </label>
+                                    <p className="mt-2 text-[10px] font-mono text-chrome-dark leading-tight">
+                                        Enable this for items that are not in stock but can be requested. This will display a "ON ORDER" badge to customers.
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-2 pt-4">
+                                    <button type="button" onClick={cancelEdit} className="flex-1 bg-zinc-800 text-white py-4 md:py-3 text-sm md:text-xs font-display tracking-widest border border-zinc-700">
+                                        CANCEL
+                                    </button>
+                                    <button type="submit" disabled={loading} className={`flex-[2] btn-glitch py-4 md:py-3 text-sm tracking-widest disabled:opacity-50 ${isEditing ? 'bg-cyber-purple' : ''}`}>
+                                        {loading ? "PROCESSING..." : (isEditing ? "UPDATE PRODUCT" : "DEPLOY PRODUCT")}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

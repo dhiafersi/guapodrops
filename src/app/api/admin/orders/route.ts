@@ -66,3 +66,28 @@ export async function PATCH(req: Request) {
         return NextResponse.json({ error: "Update failed" }, { status: 500 });
     }
 }
+
+export async function DELETE(req: Request) {
+    try {
+        const session = await getServerSession(authOptions);
+        if (!session?.user || (session.user as any).role !== 'ADMIN') {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get("id");
+
+        if (!id) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+
+        // Delete order items first due to foreign key constraints
+        await query('DELETE FROM order_items WHERE "orderId" = $1', [id]);
+        
+        // Then delete the order
+        await query('DELETE FROM orders WHERE id = $1', [id]);
+
+        return NextResponse.json({ success: true });
+    } catch (e) {
+        console.error("Order delete error:", e);
+        return NextResponse.json({ error: "Delete failed" }, { status: 500 });
+    }
+}
