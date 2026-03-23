@@ -68,6 +68,7 @@ export default function CartSidebar() {
             }
         }
         
+        setShowConfirmPrompt(false);
         finalizeAcquisition();
     };
 

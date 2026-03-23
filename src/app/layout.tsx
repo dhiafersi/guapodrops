@@ -24,6 +24,7 @@ import CartSidebar from "@/components/CartSidebar";
 import ParticleEffect from "@/components/ParticleEffect";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import FloatingGlow from "@/components/FloatingGlow";
+import Footer from "@/components/Footer";
 
 export default function RootLayout({
   children,
@@ -46,16 +47,17 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${fontOrbitron.variable} ${fontShareTechMono.variable} antialiased bg-organic-charcoal text-white selection:bg-neon-teal/30`}>
+      <body className={`${fontOrbitron.variable} ${fontShareTechMono.variable} antialiased bg-organic-charcoal text-white selection:bg-neon-teal/30 flex flex-col min-h-screen`}>
         <Providers>
           <AnimatedBackground />
           <ParticleEffect />
           <FloatingGlow />
           <Nav />
           <CartSidebar />
-          <div className="relative z-10" style={{ paddingTop: "var(--nav-height)" }}>
+          <div className="relative z-10 flex-grow" style={{ paddingTop: "var(--nav-height)" }}>
             {children}
           </div>
+          <Footer />
         </Providers>
       </body>
     </html>
